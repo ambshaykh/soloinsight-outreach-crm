@@ -1,0 +1,17 @@
+import { requireProfile } from "@/lib/auth/session";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Topbar } from "@/components/layout/topbar";
+
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const profile = await requireProfile();
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
+      <Sidebar role={profile.role} />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <Topbar profile={profile} />
+        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      </div>
+    </div>
+  );
+}

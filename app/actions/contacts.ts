@@ -1,0 +1,78 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { requireProfile } from "@/lib/auth/session";
+import type { ContactStatus, PriorityLevel } from "@/lib/types/database";
+
+export async function createContact(formData: FormData) {
+  const profile = await requireProfile();
+  const supabase = createClient();
+
+  const payload = {
+    account_id: (String(formData.get("account_id") ?? "")) || null,
+    first_name: String(formData.get("first_name") ?? "").trim(),
+    last_name: String(formData.get("last_name") ?? "").trim(),
+    title: (String(formData.get("title") ?? "")) || null,
+    email: (String(formData.get("email") ?? "")) || null,
+    phone: (String(formData.get("phone") ?? "")) || null,
+    linkedin_url: (String(formData.get("linkedin_url") ?? "")) || null,
+    priority: (String(formData.get("priority") ?? "medium")) as PriorityLevel,
+    owner_id: (String(formData.get("owner_id") ?? "")) || profile.id,
+    created_by: profile.id,
+    next_follow_up_at: (String(formData.get("next_follow_up_at") ?? "")) || null,
+    notes: (String(formData.get("notes") ?? "")) || null,
+  };
+
+  if (!payload.first_name || !payload.last_name) return { error: "First and last name are required." };
+
+  const { data, error } = await supabase.from("contacts").insert(payload).select().single();
+  if (error) return { error: error.message };
+
+  await supabase.rpc("log_audit_event", {
+    p_action: "contact.created", p_entity_type: "contact", p_entity_id: data.id,
+    p_metadata: { name: `${payload.first_name} ${payload.last_name}` },
+  });
+
+  revalidatePath("/contacts");
+  revalidatePath("/accounts");
+  revalidatePath("/dashboard");
+  return { error: null, contact: data };
+}
+
+export async function updateContactStatus(contactId: string, status: ContactStatus) {
+  await requireProfile();
+  const supabase = createClient();
+  const { error } = await supabase.from("contacts").update({ status }).eq("id", contactId);
+  if (error) return { error: error.message };
+  await supabase.rpc("log_audit_event", {
+    p_action: "contact.status_changed", p_entity_type: "contact", p_entity_id: contactId, p_metadata: { status },
+  });
+  revalidatePath("/contacts");
+  revalidatePath("/outreach-queue");
+  return { error: null };
+}
+
+export async function assignContactOwner(contactId: string, ownerId: string) {
+  await requireProfile();
+  const supabase = createClient();
+  const { error } = await supabase.from("contacts").update({ owner_id: ownerId }).eq("id", contactId);
+  if (error) return { error: error.message };
+  await supabase.rpc("log_audit_event", {
+    p_action: "contact.owner_assigned", p_entity_type: "contact", p_entity_id: contactId, p_metadata: { owner_id: ownerId },
+  });
+  revalidatePath("/contacts");
+  return { error: null };
+}
+
+export async function snoozeContactFollowUp(contactId: string, days: number) {
+  await requireProfile();
+  const supabase = createClient();
+  const newDate = new Date();
+  newDate.setDate(newDate.getDate() + days);
+  const { error } = await supabase.from("contacts").update({ next_follow_up_at: newDate.toISOString() }).eq("id", contactId);
+  if (error) return { error: error.message };
+  revalidatePath("/outreach-queue");
+  revalidatePath("/follow-ups");
+  return { error: null };
+}
