@@ -1,13 +1,32 @@
 "use client";
 
 import { motion } from "framer-motion";
-import type { LucideIcon } from "lucide-react";
+import {
+  Users, Building2, Mail, Phone, CalendarClock, CheckCircle2, Flame, Snowflake,
+  TrendingUp, CalendarCheck, Activity,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const ICONS = {
+  users: Users,
+  building2: Building2,
+  mail: Mail,
+  phone: Phone,
+  calendarClock: CalendarClock,
+  checkCircle2: CheckCircle2,
+  flame: Flame,
+  snowflake: Snowflake,
+  trendingUp: TrendingUp,
+  calendarCheck: CalendarCheck,
+  activity: Activity,
+} as const;
+
+export type MetricIconKey = keyof typeof ICONS;
 
 interface MetricCardProps {
   label: string;
   value: string | number;
-  icon: LucideIcon;
+  icon: MetricIconKey;
   accent?: "blue" | "emerald" | "amber" | "rose" | "violet";
   hint?: string;
   index?: number;
@@ -21,7 +40,8 @@ const ACCENTS: Record<string, string> = {
   violet: "from-violet-500/15 to-violet-500/5 text-violet-600",
 };
 
-export function MetricCard({ label, value, icon: Icon, accent = "blue", hint, index = 0 }: MetricCardProps) {
+export function MetricCard({ label, value, icon, accent = "blue", hint, index = 0 }: MetricCardProps) {
+  const Icon = ICONS[icon];
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}

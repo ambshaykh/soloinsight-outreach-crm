@@ -5,7 +5,6 @@ import { MetricCard } from "@/components/dashboard/metric-card";
 import { ActivityByDayChart, ActivityByChannelChart, PipelineMovementChart } from "@/components/analytics/charts";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Mail, Phone, TrendingUp, Users, CalendarCheck, CheckCircle2, Snowflake, Activity } from "lucide-react";
 
 export default async function AnalyticsPage() {
   await requireRole(["admin", "manager"]);
@@ -20,14 +19,14 @@ export default async function AnalyticsPage() {
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
-        <MetricCard index={0} label="Total Activities" value={summary.totalActivities} icon={Activity} accent="blue" />
-        <MetricCard index={1} label="Emails Sent" value={summary.emailCount} icon={Mail} accent="blue" />
-        <MetricCard index={2} label="Calls Made" value={summary.callCount} icon={Phone} accent="blue" />
-        <MetricCard index={3} label="Reply Rate" value={`${summary.replyRate}%`} icon={TrendingUp} accent="emerald" />
-        <MetricCard index={4} label="Touches / Prospect" value={summary.touchesPerProspect} icon={Users} accent="violet" />
-        <MetricCard index={5} label="Follow Ups Done" value={summary.completedFollowUps} icon={CheckCircle2} accent="emerald" />
-        <MetricCard index={6} label="Meetings Booked" value={summary.meetingsBooked} icon={CalendarCheck} accent="amber" />
-        <MetricCard index={7} label="Stale Prospects" value={summary.staleProspects} icon={Snowflake} accent="rose" />
+        <MetricCard index={0} label="Total Activities" value={summary.totalActivities} icon="activity" accent="blue" />
+        <MetricCard index={1} label="Emails Sent" value={summary.emailCount} icon="mail" accent="blue" />
+        <MetricCard index={2} label="Calls Made" value={summary.callCount} icon="phone" accent="blue" />
+        <MetricCard index={3} label="Reply Rate" value={`${summary.replyRate}%`} icon="trendingUp" accent="emerald" />
+        <MetricCard index={4} label="Touches / Prospect" value={summary.touchesPerProspect} icon="users" accent="violet" />
+        <MetricCard index={5} label="Follow Ups Done" value={summary.completedFollowUps} icon="checkCircle2" accent="emerald" />
+        <MetricCard index={6} label="Meetings Booked" value={summary.meetingsBooked} icon="calendarCheck" accent="amber" />
+        <MetricCard index={7} label="Stale Prospects" value={summary.staleProspects} icon="snowflake" accent="rose" />
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">

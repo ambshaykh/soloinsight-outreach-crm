@@ -49,14 +49,14 @@ export default async function DashboardPage() {
 
       {/* Metric cards */}
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
-        <MetricCard index={0} label="Total Prospects" value={metrics.totalProspects} icon={Users} accent="blue" />
-        <MetricCard index={1} label="Accounts In Progress" value={metrics.accountsInProgress} icon={Building2} accent="violet" />
-        <MetricCard index={2} label="Emails Today" value={metrics.emailsToday} icon={Mail} accent="blue" />
-        <MetricCard index={3} label="Calls Today" value={metrics.callsToday} icon={Phone} accent="blue" />
-        <MetricCard index={4} label="Follow Ups Due" value={metrics.followUpsDueToday} icon={CalendarClock} accent="amber" />
-        <MetricCard index={5} label="Meetings Booked" value={metrics.meetingsBooked} icon={CheckCircle2} accent="emerald" />
-        <MetricCard index={6} label="Hot Prospects" value={metrics.hotProspects} icon={Flame} accent="rose" />
-        <MetricCard index={7} label="Stale Prospects" value={metrics.staleProspects} icon={Snowflake} accent="amber" />
+        <MetricCard index={0} label="Total Prospects" value={metrics.totalProspects} icon="users" accent="blue" />
+        <MetricCard index={1} label="Accounts In Progress" value={metrics.accountsInProgress} icon="building2" accent="violet" />
+        <MetricCard index={2} label="Emails Today" value={metrics.emailsToday} icon="mail" accent="blue" />
+        <MetricCard index={3} label="Calls Today" value={metrics.callsToday} icon="phone" accent="blue" />
+        <MetricCard index={4} label="Follow Ups Due" value={metrics.followUpsDueToday} icon="calendarClock" accent="amber" />
+        <MetricCard index={5} label="Meetings Booked" value={metrics.meetingsBooked} icon="checkCircle2" accent="emerald" />
+        <MetricCard index={6} label="Hot Prospects" value={metrics.hotProspects} icon="flame" accent="rose" />
+        <MetricCard index={7} label="Stale Prospects" value={metrics.staleProspects} icon="snowflake" accent="amber" />
       </div>
 
       {/* Charts */}
