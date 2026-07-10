@@ -222,17 +222,26 @@ export async function importContactsCsv(csvText: string) {
   const errors: string[] = [];
 
   for (const [i, row] of rows.entries()) {
-    if (!row.first_name || !row.last_name) { errors.push(`Row ${i + 2}: missing first_name/last_name, skipped.`); continue; }
+    // Accept common export aliases (e.g. ZoomInfo/Apollo-style exports use "Full Name",
+    // "Job Title", "Phone Number" instead of our column names).
+    let firstName = row.first_name || "";
+    let lastName = row.last_name || "";
+    if ((!firstName || !lastName) && (row.full_name || row.name)) {
+      const parts = (row.full_name || row.name).trim().split(/\s+/);
+      firstName = firstName || parts[0] || "";
+      lastName = lastName || parts.slice(1).join(" ") || "";
+    }
+    if (!firstName || !lastName) { errors.push(`Row ${i + 2}: missing first_name/last_name, skipped.`); continue; }
 
     const companyName = row.company_name || row.company || "";
     const accountId = row.account_id || (companyName ? await resolveAccountId(supabase, profile.id, companyName) : null);
 
     const payload = {
-      first_name: row.first_name,
-      last_name: row.last_name,
-      title: row.title || null,
+      first_name: firstName,
+      last_name: lastName,
+      title: row.title || row.job_title || null,
       email: row.email || null,
-      phone: row.phone || null,
+      phone: row.phone || row.phone_number || null,
       linkedin_url: row.linkedin_url || row.linkedin || null,
       status: pickEnum<ContactStatus>(row.status, CONTACT_STATUSES, "new"),
       priority: pickEnum<PriorityLevel>(row.priority, PRIORITIES, "medium"),
