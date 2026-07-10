@@ -8,7 +8,7 @@ export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogClose = DialogPrimitive.Close;
 
-export const DialogOverlay = React.forwardRef<
+export const DialogOverlay = React.forwardRef
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
@@ -25,7 +25,7 @@ export const DialogOverlay = React.forwardRef<
 ));
 DialogOverlay.displayName = "DialogOverlay";
 
-export const DialogContent = React.forwardRef<
+export const DialogContent = React.forwardRef
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
@@ -58,4 +58,10 @@ export function DialogTitle({ className, ...props }: React.ComponentPropsWithout
   return <DialogPrimitive.Title className={cn("text-lg font-semibold text-[#0F1419]", className)} {...props} />;
 }
 
-export function DialogDescription({ className, ...props }: React.ComponentPropsWithoutRef<type
+export function DialogDescription({ className, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>) {
+  return <DialogPrimitive.Description className={cn("text-sm text-[#6B7280]", className)} {...props} />;
+}
+
+export function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("mt-6 flex justify-end gap-2", className)} {...props} />;
+}
