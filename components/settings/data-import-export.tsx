@@ -1,13 +1,16 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Download, Upload, Loader2 } from "lucide-react";
+import { Download, Upload, Loader2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { exportAccountsCsv, exportContactsCsv, importContactsCsv } from "@/app/actions/data";
+import {
+  exportAccountsCsv, exportContactsCsv, importAccountsCsv, importContactsCsv,
+  accountCsvTemplate, contactCsvTemplate,
+} from "@/app/actions/data";
 
 function download(filename: string, content: string) {
-  const blob = new Blob([content], { type: "text/csv" });
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url; a.download = filename; a.click();
@@ -15,39 +18,48 @@ function download(filename: string, content: string) {
 }
 
 export function DataImportExport() {
-  const [isPending, startTransition] = useTransition();
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const accountsFileRef = useRef<HTMLInputElement>(null);
+  const contactsFileRef = useRef<HTMLInputElement>(null);
 
-  function handleImport(file: File) {
+  function withBusy(key: string, fn: () => Promise<void>) {
+    setBusy(key);
+    fn().finally(() => setBusy(null));
+  }
+
+  function handleAccountsImport(file: File) {
     const reader = new FileReader();
     reader.onload = () => {
-      startTransition(async () => {
+      withBusy("import-accounts", async () => {
+        const result = await importAccountsCsv(String(reader.result));
+        if (result.error) toast.error(result.error.slice(0, 300));
+        if (result.imported || result.updated) {
+          toast.success(`Accounts: ${result.imported} added, ${result.updated} updated`);
+        } else if (!result.error) {
+          toast.error("No rows were imported — check your CSV columns.");
+        }
+      });
+    };
+    reader.readAsText(file);
+  }
+
+  function handleContactsImport(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      withBusy("import-contacts", async () => {
         const result = await importContactsCsv(String(reader.result));
-        if (result.error) toast.error(result.error.slice(0, 200));
-        toast.success(`Imported ${result.imported} contacts`);
+        if (result.error) toast.error(result.error.slice(0, 300));
+        if (result.imported || result.updated) {
+          toast.success(`Contacts: ${result.imported} added, ${result.updated} updated`);
+        } else if (!result.error) {
+          toast.error("No rows were imported — check your CSV columns.");
+        }
       });
     };
     reader.readAsText(file);
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <Button variant="secondary" onClick={() => startTransition(async () => download("accounts.csv", await exportAccountsCsv()))} disabled={isPending}>
-        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Export Accounts CSV
-      </Button>
-      <Button variant="secondary" onClick={() => startTransition(async () => download("contacts.csv", await exportContactsCsv()))} disabled={isPending}>
-        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Export Contacts CSV
-      </Button>
-      <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={isPending}>
-        <Upload className="h-4 w-4" /> Import Contacts CSV
-      </Button>
-      <input
-        ref={fileRef} type="file" accept=".csv" className="hidden"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImport(f); }}
-      />
-      <p className="col-span-full text-[11px] text-[#6B7280]">
-        Import expects columns: first_name, last_name, title, email, phone. Imported contacts are assigned to you.
-      </p>
-    </div>
-  );
-}
+    <div className="space-y-4">
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase 

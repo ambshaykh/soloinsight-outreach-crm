@@ -14,7 +14,12 @@ export const DialogOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={cn("fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-fade-in", className)}
+    className={cn(
+      "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm",
+      "data-[state=open]:animate-in data-[state=open]:fade-in-0",
+      "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
+      className
+    )}
     {...props}
   />
 ));
@@ -29,7 +34,9 @@ export const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-6 shadow-2xl duration-150 max-h-[85vh] overflow-y-auto",
+        "fixed left-[50%] top-[50%] z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-6 shadow-2xl max-h-[85vh] overflow-y-auto",
+        "duration-200 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+        "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
         className
       )}
       {...props}
@@ -51,10 +58,4 @@ export function DialogTitle({ className, ...props }: React.ComponentPropsWithout
   return <DialogPrimitive.Title className={cn("text-lg font-semibold text-[#0F1419]", className)} {...props} />;
 }
 
-export function DialogDescription({ className, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>) {
-  return <DialogPrimitive.Description className={cn("text-sm text-[#6B7280]", className)} {...props} />;
-}
-
-export function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("mt-6 flex justify-end gap-2", className)} {...props} />;
-}
+export function DialogDescription({ className, ...props }: React.ComponentPropsWithoutRef<type

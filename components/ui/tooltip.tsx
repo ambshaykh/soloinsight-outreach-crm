@@ -14,8 +14,6 @@ export const TooltipContent = React.forwardRef<
   <TooltipPrimitive.Content
     ref={ref}
     sideOffset={sideOffset}
-    className={cn("z-50 rounded-md bg-[#0F1419] px-2.5 py-1.5 text-xs text-white shadow-md animate-fade-in", className)}
-    {...props}
-  />
-));
-TooltipContent.displayName = "TooltipContent";
+    className={cn(
+      "z-50 rounded-md bg-[#0F1419] px-2.5 py-1.5 text-xs text-white shadow-md",
+      "data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=

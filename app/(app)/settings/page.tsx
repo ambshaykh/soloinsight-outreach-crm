@@ -96,11 +96,9 @@ export default async function SettingsPage() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Database className="h-4 w-4 text-primary" /> Data</CardTitle>
-            <CardDescription>Export your pipeline or bulk-import new contacts.</CardDescription>
+            <CardDescription>Export your pipeline, or bulk-import accounts and contacts from CSV.</CardDescription>
           </CardHeader>
           <CardContent><DataImportExport /></CardContent>
         </Card>
       </div>
-    </PageTransition>
-  );
-}
+    </Page

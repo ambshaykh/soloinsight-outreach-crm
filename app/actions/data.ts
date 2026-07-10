@@ -2,10 +2,16 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth/session";
+import type { AccountStatus, ContactStatus, PriorityLevel } from "@/lib/types/database";
 
-function toCsv(rows: Record<string, unknown>[]): string {
-  if (rows.length === 0) return "";
-  const headers = Object.keys(rows[0]);
+/* ---------------------------------------------------------------------- */
+/* CSV helpers — hand-rolled, RFC4180-compliant (quoted fields, embedded  */
+/* commas/newlines, escaped quotes) so no extra npm dependency is needed. */
+/* ---------------------------------------------------------------------- */
+
+function toCsv(rows: Record<string, unknown>[], columns?: string[]): string {
+  if (rows.length === 0) return columns ? columns.join(",") : "";
+  const headers = columns ?? Object.keys(rows[0]);
   const escape = (v: unknown) => {
     const s = v === null || v === undefined ? "" : String(v);
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -13,52 +19,43 @@ function toCsv(rows: Record<string, unknown>[]): string {
   return [headers.join(","), ...rows.map((r) => headers.map((h) => escape(r[h])).join(","))].join("\n");
 }
 
-export async function exportAccountsCsv() {
-  await requireProfile();
-  const supabase = createClient();
-  const { data } = await supabase.from("accounts").select("company_name, domain, industry, region, company_size, source, status, priority, icp_score, last_touched_at, next_follow_up_at");
-  return toCsv(data ?? []);
-}
+/** Parses CSV text into rows of string cells, respecting quoted fields. */
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let inQuotes = false;
+  const src = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 
-export async function exportContactsCsv() {
-  await requireProfile();
-  const supabase = createClient();
-  const { data } = await supabase.from("contacts").select("first_name, last_name, title, email, phone, linkedin_url, status, priority, last_contacted_at, next_follow_up_at");
-  return toCsv(data ?? []);
-}
-
-export async function importContactsCsv(csvText: string) {
-  const profile = await requireProfile();
-  const supabase = createClient();
-  const lines = csvText.trim().split(/\r?\n/);
-  if (lines.length < 2) return { error: "CSV has no data rows.", imported: 0 };
-
-  const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
-  let imported = 0;
-  const errors: string[] = [];
-
-  for (const line of lines.slice(1)) {
-    const cells = line.split(",").map((c) => c.trim());
-    const row: Record<string, string> = {};
-    headers.forEach((h, i) => (row[h] = cells[i] ?? ""));
-    if (!row.first_name || !row.last_name) { errors.push(`Skipped row: ${line}`); continue; }
-
-    const { error } = await supabase.from("contacts").insert({
-      first_name: row.first_name,
-      last_name: row.last_name,
-      title: row.title || null,
-      email: row.email || null,
-      phone: row.phone || null,
-      owner_id: profile.id,
-      created_by: profile.id,
-    });
-    if (error) errors.push(error.message);
-    else imported += 1;
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (src[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else {
+        field += c;
+      }
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ",") {
+      row.push(field); field = "";
+    } else if (c === "\n") {
+      row.push(field); field = "";
+      rows.push(row); row = [];
+    } else {
+      field += c;
+    }
   }
-
-  await supabase.rpc("log_audit_event", {
-    p_action: "contacts.imported", p_entity_type: "contact", p_entity_id: null, p_metadata: { imported },
-  });
-
-  return { error: errors.length ? errors.join("; ") : null, imported };
+  if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row); }
+  return rows.filter((r) => !(r.length === 1 && r[0].trim() === ""));
 }
+
+/** Turns parsed CSV rows into an array of lowercase-keyed objects using the header row. */
+function csvToObjects(csvText: string): { rows: Record<string, string>[]; error?: string } {
+  const parsed = parseCsv(csvText.trim());
+  if (parsed.length < 2) return { rows: [], error: "CSV has no data rows." };
+  const headers = parsed[0].map((h) => h.trim().toLowerCase().replace(/\s+/g, "_"));
+  const rows = parsed.slice(1).map((cells) => {
+    const row: Record<string, string> = {};
+    headers.forEach((h, i) => (row[h] = (

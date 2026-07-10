@@ -4,17 +4,17 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-150 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-150 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.98]",
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.98]",
-        secondary: "bg-white text-[#0F1419] border border-slate-200 hover:bg-slate-50 shadow-sm",
-        outline: "border border-slate-200 bg-transparent hover:bg-slate-50 text-[#0F1419]",
+        default: "bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white shadow-sm hover:shadow-md hover:brightness-110",
+        secondary: "bg-white text-[#0F1419] border border-slate-200 hover:bg-slate-50 hover:shadow-md shadow-sm",
+        outline: "border border-slate-200 bg-transparent hover:bg-slate-50 hover:border-slate-300 text-[#0F1419]",
         ghost: "hover:bg-slate-100 text-[#0F1419]",
-        destructive: "bg-rose-600 text-white hover:bg-rose-700",
-        link: "text-primary underline-offset-4 hover:underline",
-        dark: "bg-[#0F1419] text-white hover:bg-[#1a2030]",
+        destructive: "bg-rose-600 text-white hover:bg-rose-700 hover:shadow-md",
+        link: "text-primary underline-offset-4 hover:underline active:scale-100",
+        dark: "bg-[#0F1419] text-white hover:bg-[#1a2030] hover:shadow-md",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -36,9 +36,4 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
-  }
-);
-Button.displayName = "Button";
-
-export { Button, buttonVariants };
+    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {

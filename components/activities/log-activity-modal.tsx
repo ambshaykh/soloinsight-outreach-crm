@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Mail, Phone, Linkedin, StickyNote, CalendarCheck, Loader2 } from "lucide-react";
@@ -79,7 +79,8 @@ export function LogActivityModal({
     setSubject(""); setNotes(""); setFollowUp(""); setChipIndex(null); setPicked(null);
   }
 
-  function handleSubmit() {
+  function handleSubmit(e?: FormEvent) {
+    e?.preventDefault();
     if (!activeContactId) {
       toast.error("Pick a contact to log this activity against.");
       return;
@@ -121,80 +122,72 @@ export function LogActivityModal({
           </DialogDescription>
         </DialogHeader>
 
-        {!contactId && (
-          <div className="mb-4">
-            <Label>Contact</Label>
-            {picked ? (
-              <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
-                <span>{picked.first_name} {picked.last_name}</span>
-                <button className="text-xs text-primary" onClick={() => setPicked(null)}>Change</button>
-              </div>
-            ) : (
-              <ContactPicker onSelect={setPicked} />
-            )}
-          </div>
-        )}
-
-        <div className="mb-4 grid grid-cols-5 gap-1.5">
-          {TYPE_TABS.map(({ type: t, label, icon: Icon }) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => { setType(t); setChipIndex(null); }}
-              className={cn(
-                "flex flex-col items-center gap-1 rounded-lg border px-1 py-2 text-[11px] font-medium transition-colors",
-                type === t ? "border-primary bg-blue-50 text-primary" : "border-slate-200 text-slate-500 hover:bg-slate-50"
+        <form onSubmit={handleSubmit}>
+          {!contactId && (
+            <div className="mb-4">
+              <Label>Contact</Label>
+              {picked ? (
+                <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+                  <span>{picked.first_name} {picked.last_name}</span>
+                  <button type="button" className="text-xs text-primary" onClick={() => setPicked(null)}>Change</button>
+                </div>
+              ) : (
+                <ContactPicker onSelect={setPicked} />
               )}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </button>
-          ))}
-        </div>
+            </div>
+          )}
 
-        {chips.length > 0 && (
-          <div className="mb-4 flex flex-wrap gap-1.5">
-            {chips.map((chip, i) => (
+          <div className="mb-4 grid grid-cols-5 gap-1.5">
+            {TYPE_TABS.map(({ type: t, label, icon: Icon }) => (
               <button
-                key={chip.label}
+                key={t}
                 type="button"
-                onClick={() => setChipIndex(chipIndex === i ? null : i)}
+                onClick={() => { setType(t); setChipIndex(null); }}
                 className={cn(
-                  "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
-                  chipIndex === i ? "border-primary bg-primary text-white" : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                  "flex flex-col items-center gap-1 rounded-lg border px-1 py-2 text-[11px] font-medium transition-colors",
+                  type === t ? "border-primary bg-blue-50 text-primary" : "border-slate-200 text-slate-500 hover:bg-slate-50"
                 )}
               >
-                {chip.label}
+                <Icon className="h-4 w-4" />
+                {label}
               </button>
             ))}
           </div>
-        )}
 
-        <div className="space-y-3">
-          {type === "email" && (
-            <div>
-              <Label htmlFor="subject">Subject</Label>
-              <Input id="subject" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Quick question about…" />
+          {chips.length > 0 && (
+            <div className="mb-4 flex flex-wrap gap-1.5">
+              {chips.map((chip, i) => (
+                <button
+                  key={chip.label}
+                  type="button"
+                  onClick={() => setChipIndex(chipIndex === i ? null : i)}
+                  className={cn(
+                    "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                    chipIndex === i ? "border-primary bg-primary text-white" : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                  )}
+                >
+                  {chip.label}
+                </button>
+              ))}
             </div>
           )}
-          <div>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="What happened, what was said…" />
-          </div>
-          <div>
-            <Label htmlFor="follow_up">Next follow-up</Label>
-            <Input id="follow_up" type="date" value={followUp} onChange={(e) => setFollowUp(e.target.value)} />
-          </div>
-        </div>
 
-        <DialogFooter>
-          <Button variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={isPending}>
-            {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-            Save activity
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
+          <div className="space-y-3">
+            {type === "email" && (
+              <div>
+                <Label htmlFor="subject">Subject</Label>
+                <Input id="subject" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Quick question about…" />
+              </div>
+            )}
+            <div>
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="What happened, what was said…" />
+            </div>
+            <div>
+              <Label htmlFor="follow_up">Next follow-up</Label>
+              <Input id="follow_up" type="date" value={followUp} onChange={(e) => setFollowUp(e.target.value)} />
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}

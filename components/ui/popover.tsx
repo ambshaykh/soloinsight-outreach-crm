@@ -16,11 +16,6 @@ export const PopoverContent = React.forwardRef<
       align={align}
       sideOffset={sideOffset}
       className={cn(
-        "z-50 w-72 rounded-lg border border-slate-200 bg-white p-4 shadow-lg animate-fade-in",
-        className
-      )}
-      {...props}
-    />
-  </PopoverPrimitive.Portal>
-));
-PopoverContent.displayName = "PopoverContent";
+        "z-50 w-72 rounded-lg border border-slate-200 bg-white p-4 shadow-lg",
+        "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+        "data-[state=closed]:animate-out data-[sta

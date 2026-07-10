@@ -20,7 +20,10 @@ export const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "z-50 min-w-[10rem] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg animate-fade-in",
+        "z-50 min-w-[10rem] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg",
+        "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+        "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
+        "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2",
         className
       )}
       {...props}
@@ -55,10 +58,4 @@ DropdownMenuLabel.displayName = "DropdownMenuLabel";
 export const DropdownMenuSeparator = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
->(({ className, ...props }, ref) => (
-  <DropdownMenuPrimitive.Separator ref={ref} className={cn("my-1 h-px bg-slate-100", className)} {...props} />
-));
-DropdownMenuSeparator.displayName = "DropdownMenuSeparator";
-
-export const DropdownMenuCheckboxItem = DropdownMenuPrimitive.CheckboxItem;
-export const DropdownMenuRadioItem = DropdownMenuPrimitive.RadioItem;
+>(({ cl
