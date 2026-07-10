@@ -1,6 +1,3 @@
-import {
-  Users, Building2, Mail, Phone, CalendarClock, CheckCircle2, Flame, Snowflake,
-} from "lucide-react";
 import { requireProfile } from "@/lib/auth/session";
 import { getDashboardData } from "@/lib/data/dashboard";
 import { PageTransition } from "@/components/shared/page-transition";

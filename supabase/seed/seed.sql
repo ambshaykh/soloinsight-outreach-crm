@@ -199,8 +199,8 @@ begin
         v_acct,
         v_contact_id,
         v_type,
-        case v_type when 'email' then 'email' when 'call' then 'phone' when 'linkedin' then 'linkedin'
-             when 'meeting' then 'in_person' else 'other' end,
+        (case v_type when 'email' then 'email' when 'call' then 'phone' when 'linkedin' then 'linkedin'
+             when 'meeting' then 'in_person' else 'other' end)::public.activity_channel,
         case when v_type = 'email' then v_email_subjects[((i) % array_length(v_email_subjects,1)) + 1] else null end,
         case v_type
           when 'email' then 'Sent manual outreach email. Awaiting reply.'
@@ -240,7 +240,7 @@ begin
         end,
         'Auto-generated follow-up task from outreach cadence.',
         now() + ((i % 14 - 6) || ' days')::interval,
-        case when i % 6 = 0 then 'completed' when i % 5 = 0 then 'snoozed' else 'open' end,
+        (case when i % 6 = 0 then 'completed' when i % 5 = 0 then 'snoozed' else 'open' end)::public.task_status,
         v_priorities[((i) % array_length(v_priorities,1)) + 1],
         coalesce(v_owner, v_sdr1_id),
         coalesce(v_owner, v_sdr1_id)

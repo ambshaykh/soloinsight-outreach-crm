@@ -190,4 +190,14 @@ export function LogActivityModal({
           </div>
 
           <DialogFooter className="mt-4">
-            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}
+            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save activity
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

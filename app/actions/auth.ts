@@ -9,11 +9,8 @@ export async function signIn(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const supabase = createClient();
 
- const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    console.error("SIGNIN_DEBUG", JSON.stringify({ name: error.name, status: error.status, message: error.message, cause: String((error as any).cause ?? "") }));
-    return { error: error.message };
-  }
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return { error: error.message };
 
   await supabase.rpc("log_audit_event", {
     p_action: "user.login",

@@ -101,4 +101,6 @@ export default async function SettingsPage() {
           <CardContent><DataImportExport /></CardContent>
         </Card>
       </div>
-    </Page
+    </PageTransition>
+  );
+}
