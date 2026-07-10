@@ -8,7 +8,7 @@ export const Select = SelectPrimitive.Root;
 export const SelectGroup = SelectPrimitive.Group;
 export const SelectValue = SelectPrimitive.Value;
 
-export const SelectTrigger = React.forwardRef
+export const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => (
@@ -28,7 +28,7 @@ export const SelectTrigger = React.forwardRef
 ));
 SelectTrigger.displayName = "SelectTrigger";
 
-export const SelectContent = React.forwardRef
+export const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
 >(({ className, children, position = "popper", ...props }, ref) => (
@@ -50,7 +50,7 @@ export const SelectContent = React.forwardRef
 ));
 SelectContent.displayName = "SelectContent";
 
-export const SelectItem = React.forwardRef
+export const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(({ className, children, ...props }, ref) => (
