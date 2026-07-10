@@ -30,23 +30,24 @@ export async function toggleUserActive(profileId: string, isActive: boolean) {
   return { error: null };
 }
 
-export async function updateOwnProfile(formData: FormData) {
+// Note: these two return void (not { error }) because they're wired directly to a
+// native <form action={...}> in a Server Component — Next.js requires that signature.
+// Errors are logged server-side rather than surfaced back into the form.
+export async function updateOwnProfile(formData: FormData): Promise<void> {
   const profile = await requireProfile();
   const supabase = createClient();
   const fullName = String(formData.get("full_name") ?? "").trim();
   const { error } = await supabase.from("profiles").update({ full_name: fullName }).eq("id", profile.id);
-  if (error) return { error: error.message };
+  if (error) { console.error("updateOwnProfile failed:", error.message); return; }
   revalidatePath("/settings");
-  return { error: null };
 }
 
-export async function createTeam(formData: FormData) {
+export async function createTeam(formData: FormData): Promise<void> {
   const profile = await requireRole(["admin"]);
   const supabase = createClient();
   const name = String(formData.get("name") ?? "").trim();
-  if (!name) return { error: "Team name is required." };
+  if (!name) { console.error("createTeam failed: team name is required."); return; }
   const { error } = await supabase.from("teams").insert({ name, created_by: profile.id });
-  if (error) return { error: error.message };
+  if (error) { console.error("createTeam failed:", error.message); return; }
   revalidatePath("/settings");
-  return { error: null };
 }
