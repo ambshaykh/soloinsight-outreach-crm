@@ -2,17 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Mail, Phone, Plus, LogOut, Settings, UserCircle, ChevronDown } from "lucide-react";
+import { Search, Mail, Phone, Plus, LogOut, Settings, UserCircle, ChevronDown, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { SecurityStatusBadge } from "@/components/shared/security-status-badge";
 import { AccountFormDialog } from "@/components/accounts/account-form-dialog";
 import { ContactFormDialog } from "@/components/contacts/contact-form-dialog";
 import { LogActivityModal } from "@/components/activities/log-activity-modal";
+import { DataImportExport } from "@/components/settings/data-import-export";
 import { initials } from "@/lib/utils";
 import { ROLE_LABELS } from "@/lib/constants";
 import { signOut } from "@/app/actions/auth";
@@ -22,6 +24,7 @@ export function Topbar({ profile }: { profile: Profile }) {
   const [logType, setLogType] = useState<"email" | "call" | null>(null);
   const [addAccountOpen, setAddAccountOpen] = useState(false);
   const [addContactOpen, setAddContactOpen] = useState(false);
+  const [dataDialogOpen, setDataDialogOpen] = useState(false);
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-6 backdrop-blur">
@@ -47,6 +50,10 @@ export function Topbar({ profile }: { profile: Profile }) {
         </Button>
         <Button size="sm" variant="secondary" onClick={() => setLogType("call")}>
           <Phone className="h-4 w-4" /> Log Call
+        </Button>
+
+        <Button size="sm" variant="secondary" onClick={() => setDataDialogOpen(true)}>
+          <FileSpreadsheet className="h-4 w-4" /> Import/Export
         </Button>
 
         <DropdownMenu>
@@ -97,6 +104,16 @@ export function Topbar({ profile }: { profile: Profile }) {
       <LogActivityModal open={logType !== null} onOpenChange={(o) => !o && setLogType(null)} defaultType={logType ?? "email"} />
       <AccountFormDialog trigger={null} open={addAccountOpen} onOpenChange={setAddAccountOpen} />
       <ContactFormDialog trigger={null} open={addContactOpen} onOpenChange={setAddContactOpen} />
+
+      <Dialog open={dataDialogOpen} onOpenChange={setDataDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Import / Export data</DialogTitle>
+            <DialogDescription>Export your pipeline, or bulk-import accounts and contacts from CSV.</DialogDescription>
+          </DialogHeader>
+          <DataImportExport />
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
