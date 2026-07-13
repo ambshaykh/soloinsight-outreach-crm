@@ -155,11 +155,6 @@ function LoginForm() {
                 This CRM is invite-only. Ask your admin for an invite link.
               </p>
 
-              <div className="mt-8 rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-[#6B7280]">
-                <p className="font-semibold text-slate-600">Demo credentials (after seeding)</p>
-                <p>admin@soloinsight.com · manager@soloinsight.com · sdr1@soloinsight.com</p>
-                <p>Password: Password123!</p>
-              </div>
             </div>
           </motion.div>
         </div>
