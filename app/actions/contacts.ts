@@ -53,6 +53,19 @@ export async function updateContactStatus(contactId: string, status: ContactStat
   return { error: null };
 }
 
+export async function updateContactPriority(contactId: string, priority: PriorityLevel) {
+  await requireProfile();
+  const supabase = createClient();
+  const { error } = await supabase.from("contacts").update({ priority }).eq("id", contactId);
+  if (error) return { error: error.message };
+  await supabase.rpc("log_audit_event", {
+    p_action: "contact.priority_changed", p_entity_type: "contact", p_entity_id: contactId, p_metadata: { priority },
+  });
+  revalidatePath("/contacts");
+  revalidatePath("/outreach-queue");
+  return { error: null };
+}
+
 export async function assignContactOwner(contactId: string, ownerId: string) {
   await requireProfile();
   const supabase = createClient();

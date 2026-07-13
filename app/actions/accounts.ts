@@ -51,6 +51,18 @@ export async function updateAccountStatus(accountId: string, status: AccountStat
   return { error: null };
 }
 
+export async function updateAccountPriority(accountId: string, priority: PriorityLevel) {
+  await requireProfile();
+  const supabase = createClient();
+  const { error } = await supabase.from("accounts").update({ priority }).eq("id", accountId);
+  if (error) return { error: error.message };
+  await supabase.rpc("log_audit_event", {
+    p_action: "account.priority_changed", p_entity_type: "account", p_entity_id: accountId, p_metadata: { priority },
+  });
+  revalidatePath("/accounts");
+  return { error: null };
+}
+
 export async function assignAccountOwner(accountId: string, ownerId: string) {
   await requireProfile();
   const supabase = createClient();

@@ -6,15 +6,14 @@ import { toast } from "sonner";
 import { Mail, Phone, Linkedin, Building2, Loader2, Trash2 } from "lucide-react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { OwnerSelect } from "@/components/shared/owner-select";
-import { PriorityBadge } from "@/components/shared/priority-badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogActivityModal } from "@/components/activities/log-activity-modal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { CONTACT_STATUS_LABELS } from "@/lib/constants";
-import { updateContactStatus, assignContactOwner, deleteContact } from "@/app/actions/contacts";
+import { CONTACT_STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
+import { updateContactStatus, updateContactPriority, assignContactOwner, deleteContact } from "@/app/actions/contacts";
 import { initials, fullName } from "@/lib/utils";
-import type { Contact, ContactStatus, Profile, Account } from "@/lib/types/database";
+import type { Contact, ContactStatus, PriorityLevel, Profile, Account } from "@/lib/types/database";
 
 export function ContactDetailHeader({
   contact, owner, account,
@@ -29,6 +28,13 @@ export function ContactDetailHeader({
     startTransition(async () => {
       const r = await updateContactStatus(contact.id, status as ContactStatus);
       if (r.error) toast.error(r.error); else { toast.success("Status updated"); router.refresh(); }
+    });
+  }
+
+  function handlePriority(priority: string) {
+    startTransition(async () => {
+      const r = await updateContactPriority(contact.id, priority as PriorityLevel);
+      if (r.error) toast.error(r.error); else { toast.success("Priority updated"); router.refresh(); }
     });
   }
 
@@ -72,7 +78,15 @@ export function ContactDetailHeader({
             )}
           </div>
         </div>
-        <PriorityBadge priority={contact.priority} />
+        <div className="w-36">
+          <p className="mb-1 text-right text-[11px] font-medium text-[#6B7280]">Priority</p>
+          <Select defaultValue={contact.priority} onValueChange={handlePriority}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {Object.entries(PRIORITY_LABELS).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-4 text-xs text-[#6B7280]">
@@ -132,18 +146,22 @@ export function ContactDetailHeader({
 
       <Dialog open={confirmOpen} onOpenChange={(o) => !deleting && setConfirmOpen(o)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete {name}?</DialogTitle>
-            <DialogDescription>
-              This permanently removes the contact and its activity history. This can't be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setConfirmOpen(false)} disabled={deleting}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-              {deleting && <Loader2 className="h-4 w-4 animate-spin" />} Delete
-            </Button>
-          </DialogFooter>
+          <form
+            onSubmit={(e) => { e.preventDefault(); handleDelete(); }}
+          >
+            <DialogHeader>
+              <DialogTitle>Delete {name}?</DialogTitle>
+              <DialogDescription>
+                This permanently removes the contact and its activity history. This can't be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={() => setConfirmOpen(false)} disabled={deleting}>Cancel</Button>
+              <Button type="submit" variant="destructive" disabled={deleting} autoFocus>
+                {deleting && <Loader2 className="h-4 w-4 animate-spin" />} Delete
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

@@ -9,14 +9,13 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { PriorityBadge } from "@/components/shared/priority-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { LogActivityModal } from "@/components/activities/log-activity-modal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { formatRelativeDate, initials, fullName } from "@/lib/utils";
-import { CONTACT_STATUS_LABELS } from "@/lib/constants";
-import { updateContactStatus, deleteContact } from "@/app/actions/contacts";
-import type { Contact, ContactStatus, Profile } from "@/lib/types/database";
+import { CONTACT_STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
+import { updateContactStatus, updateContactPriority, deleteContact } from "@/app/actions/contacts";
+import type { Contact, ContactStatus, PriorityLevel, Profile } from "@/lib/types/database";
 
 type Row = Contact & {
   account: { id: string; company_name: string; industry: string | null } | null;
@@ -38,6 +37,13 @@ export function ContactsTable({ contacts }: { contacts: Row[] }) {
     startTransition(async () => {
       const r = await updateContactStatus(contactId, status as ContactStatus);
       if (r.error) toast.error(r.error); else { toast.success("Status updated"); router.refresh(); }
+    });
+  }
+
+  function handlePriority(contactId: string, priority: string) {
+    startTransition(async () => {
+      const r = await updateContactPriority(contactId, priority as PriorityLevel);
+      if (r.error) toast.error(r.error); else { toast.success("Priority updated"); router.refresh(); }
     });
   }
 
@@ -94,7 +100,14 @@ export function ContactsTable({ contacts }: { contacts: Row[] }) {
                   </SelectContent>
                 </Select>
               </TableCell>
-              <TableCell><PriorityBadge priority={c.priority} /></TableCell>
+              <TableCell>
+                <Select defaultValue={c.priority} onValueChange={(v) => handlePriority(c.id, v)}>
+                  <SelectTrigger className="h-8 w-[110px] text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(PRIORITY_LABELS).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </TableCell>
               <TableCell className="text-sm">{c.owner?.full_name ?? "—"}</TableCell>
               <TableCell className="text-sm text-[#6B7280]">{formatRelativeDate(c.last_contacted_at)}</TableCell>
               <TableCell className="text-sm text-[#6B7280]">{formatRelativeDate(c.next_follow_up_at)}</TableCell>
@@ -133,16 +146,18 @@ export function ContactsTable({ contacts }: { contacts: Row[] }) {
 
       <Dialog open={!!toDelete} onOpenChange={(o) => !deleting && !o && setToDelete(null)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete {toDelete?.name}?</DialogTitle>
-            <DialogDescription>This permanently removes the contact and its activity history. This can't be undone.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setToDelete(null)} disabled={deleting}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-              {deleting && <Loader2 className="h-4 w-4 animate-spin" />} Delete
-            </Button>
-          </DialogFooter>
+          <form onSubmit={(e) => { e.preventDefault(); handleDelete(); }}>
+            <DialogHeader>
+              <DialogTitle>Delete {toDelete?.name}?</DialogTitle>
+              <DialogDescription>This permanently removes the contact and its activity history. This can't be undone.</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={() => setToDelete(null)} disabled={deleting}>Cancel</Button>
+              <Button type="submit" variant="destructive" disabled={deleting} autoFocus>
+                {deleting && <Loader2 className="h-4 w-4 animate-spin" />} Delete
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </>

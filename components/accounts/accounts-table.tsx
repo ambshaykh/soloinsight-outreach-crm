@@ -8,12 +8,11 @@ import { Building2 } from "lucide-react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { PriorityBadge } from "@/components/shared/priority-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatRelativeDate, initials } from "@/lib/utils";
-import { ACCOUNT_STATUS_LABELS } from "@/lib/constants";
-import { updateAccountStatus } from "@/app/actions/accounts";
-import type { Account, AccountStatus, Profile } from "@/lib/types/database";
+import { ACCOUNT_STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
+import { updateAccountStatus, updateAccountPriority } from "@/app/actions/accounts";
+import type { Account, AccountStatus, PriorityLevel, Profile } from "@/lib/types/database";
 
 type Row = Account & { owner: Pick<Profile, "id" | "full_name" | "email" | "avatar_url"> | null };
 
@@ -29,6 +28,13 @@ export function AccountsTable({ accounts }: { accounts: Row[] }) {
     startTransition(async () => {
       const r = await updateAccountStatus(accountId, status as AccountStatus);
       if (r.error) toast.error(r.error); else { toast.success("Status updated"); router.refresh(); }
+    });
+  }
+
+  function handlePriority(accountId: string, priority: string) {
+    startTransition(async () => {
+      const r = await updateAccountPriority(accountId, priority as PriorityLevel);
+      if (r.error) toast.error(r.error); else { toast.success("Priority updated"); router.refresh(); }
     });
   }
 
@@ -64,7 +70,14 @@ export function AccountsTable({ accounts }: { accounts: Row[] }) {
                 </SelectContent>
               </Select>
             </TableCell>
-            <TableCell><PriorityBadge priority={a.priority} /></TableCell>
+            <TableCell>
+              <Select defaultValue={a.priority} onValueChange={(v) => handlePriority(a.id, v)}>
+                <SelectTrigger className="h-8 w-[110px] text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(PRIORITY_LABELS).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </TableCell>
             <TableCell className="text-sm font-medium">{a.icp_score}</TableCell>
             <TableCell>
               {a.owner ? (
