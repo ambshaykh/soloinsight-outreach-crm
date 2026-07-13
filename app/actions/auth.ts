@@ -10,7 +10,15 @@ export async function signIn(formData: FormData) {
   const supabase = createClient();
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("signIn failed:", JSON.stringify({
+      message: error.message,
+      status: (error as any).status,
+      name: error.name,
+      code: (error as any).code,
+    }));
+    return { error: error.message || "Sign-in failed. Please check your credentials and try again." };
+  }
 
   await supabase.rpc("log_audit_event", {
     p_action: "user.login",
