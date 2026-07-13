@@ -65,6 +65,24 @@ export async function assignContactOwner(contactId: string, ownerId: string) {
   return { error: null };
 }
 
+export async function deleteContact(contactId: string) {
+  await requireProfile();
+  const supabase = createClient();
+
+  const { error } = await supabase.from("contacts").delete().eq("id", contactId);
+  if (error) return { error: error.message };
+
+  await supabase.rpc("log_audit_event", {
+    p_action: "contact.deleted", p_entity_type: "contact", p_entity_id: contactId, p_metadata: {},
+  });
+
+  revalidatePath("/contacts");
+  revalidatePath("/accounts");
+  revalidatePath("/dashboard");
+  revalidatePath("/outreach-queue");
+  return { error: null };
+}
+
 export async function snoozeContactFollowUp(contactId: string, days: number) {
   await requireProfile();
   const supabase = createClient();

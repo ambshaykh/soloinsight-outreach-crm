@@ -1,20 +1,35 @@
 "use client";
 
+import { useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Building2 } from "lucide-react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { AccountStatusBadge } from "@/components/shared/status-badge";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { PriorityBadge } from "@/components/shared/priority-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatRelativeDate, initials } from "@/lib/utils";
-import { Building2 } from "lucide-react";
-import type { Account, Profile } from "@/lib/types/database";
+import { ACCOUNT_STATUS_LABELS } from "@/lib/constants";
+import { updateAccountStatus } from "@/app/actions/accounts";
+import type { Account, AccountStatus, Profile } from "@/lib/types/database";
 
 type Row = Account & { owner: Pick<Profile, "id" | "full_name" | "email" | "avatar_url"> | null };
 
 export function AccountsTable({ accounts }: { accounts: Row[] }) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+
   if (accounts.length === 0) {
     return <EmptyState icon={Building2} title="No accounts yet" description="Add your first account to start building the pipeline." />;
+  }
+
+  function handleStatus(accountId: string, status: string) {
+    startTransition(async () => {
+      const r = await updateAccountStatus(accountId, status as AccountStatus);
+      if (r.error) toast.error(r.error); else { toast.success("Status updated"); router.refresh(); }
+    });
   }
 
   return (
@@ -41,7 +56,14 @@ export function AccountsTable({ accounts }: { accounts: Row[] }) {
               <p className="text-xs text-[#6B7280]">{a.domain}</p>
             </TableCell>
             <TableCell className="text-sm text-[#6B7280]">{a.industry ?? "—"}</TableCell>
-            <TableCell><AccountStatusBadge status={a.status} /></TableCell>
+            <TableCell>
+              <Select defaultValue={a.status} onValueChange={(v) => handleStatus(a.id, v)}>
+                <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(ACCOUNT_STATUS_LABELS).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </TableCell>
             <TableCell><PriorityBadge priority={a.priority} /></TableCell>
             <TableCell className="text-sm font-medium">{a.icp_score}</TableCell>
             <TableCell>

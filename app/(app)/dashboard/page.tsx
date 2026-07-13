@@ -23,7 +23,7 @@ export default async function DashboardPage() {
   return (
     <PageTransition>
       {/* Dark hero header */}
-      <div className="relative mb-6 overflow-hidden rounded-2xl bg-cg-hero px-8 py-8 text-white">
+      <div className="hero-gradient-animated relative mb-6 overflow-hidden rounded-2xl px-8 py-8 text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(91,156,255,0.25),transparent_50%)]" />
         <div className="relative z-10 flex flex-wrap items-end justify-between gap-4">
           <div>

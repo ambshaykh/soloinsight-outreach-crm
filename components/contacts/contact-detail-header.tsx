@@ -3,22 +3,27 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Mail, Phone, Linkedin, Building2, Loader2 } from "lucide-react";
+import { Mail, Phone, Linkedin, Building2, Loader2, Trash2 } from "lucide-react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { OwnerSelect } from "@/components/shared/owner-select";
 import { PriorityBadge } from "@/components/shared/priority-badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogActivityModal } from "@/components/activities/log-activity-modal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { CONTACT_STATUS_LABELS } from "@/lib/constants";
-import { updateContactStatus, assignContactOwner } from "@/app/actions/contacts";
+import { updateContactStatus, assignContactOwner, deleteContact } from "@/app/actions/contacts";
 import { initials, fullName } from "@/lib/utils";
 import type { Contact, ContactStatus, Profile, Account } from "@/lib/types/database";
 
-export function ContactDetailHeader({ contact, owner, account }: { contact: Contact; owner: Profile | null; account: Account | null }) {
+export function ContactDetailHeader({
+  contact, owner, account,
+}: { contact: Contact; owner: Profile | null; account: Account | null }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [logType, setLogType] = useState<"email" | "call" | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   function handleStatus(status: string) {
     startTransition(async () => {
@@ -31,6 +36,22 @@ export function ContactDetailHeader({ contact, owner, account }: { contact: Cont
     startTransition(async () => {
       const r = await assignContactOwner(contact.id, ownerId);
       if (r.error) toast.error(r.error); else { toast.success("Owner updated"); router.refresh(); }
+    });
+  }
+
+  function handleDelete() {
+    setDeleting(true);
+    startTransition(async () => {
+      const r = await deleteContact(contact.id);
+      setDeleting(false);
+      if (r.error) {
+        toast.error(r.error);
+        return;
+      }
+      setConfirmOpen(false);
+      toast.success("Contact deleted");
+      router.push("/contacts");
+      router.refresh();
     });
   }
 
@@ -88,9 +109,14 @@ export function ContactDetailHeader({ contact, owner, account }: { contact: Cont
         </div>
       </div>
 
-      <div className="mt-4 flex gap-2">
-        <Button size="sm" onClick={() => setLogType("email")}><Mail className="h-4 w-4" /> Log Email</Button>
-        <Button size="sm" variant="secondary" onClick={() => setLogType("call")}><Phone className="h-4 w-4" /> Log Call</Button>
+      <div className="mt-4 flex items-center justify-between gap-2">
+        <div className="flex gap-2">
+          <Button size="sm" onClick={() => setLogType("email")}><Mail className="h-4 w-4" /> Log Email</Button>
+          <Button size="sm" variant="secondary" onClick={() => setLogType("call")}><Phone className="h-4 w-4" /> Log Call</Button>
+        </div>
+        <Button size="sm" variant="destructive" onClick={() => setConfirmOpen(true)}>
+          <Trash2 className="h-4 w-4" /> Delete contact
+        </Button>
       </div>
 
       {contact.notes && <p className="mt-4 rounded-lg bg-slate-50 p-3 text-xs text-[#6B7280]">{contact.notes}</p>}
@@ -103,6 +129,23 @@ export function ContactDetailHeader({ contact, owner, account }: { contact: Cont
         accountId={contact.account_id}
         defaultType={logType ?? "email"}
       />
+
+      <Dialog open={confirmOpen} onOpenChange={(o) => !deleting && setConfirmOpen(o)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete {name}?</DialogTitle>
+            <DialogDescription>
+              This permanently removes the contact and its activity history. This can't be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setConfirmOpen(false)} disabled={deleting}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting && <Loader2 className="h-4 w-4 animate-spin" />} Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

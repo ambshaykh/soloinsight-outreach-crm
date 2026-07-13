@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { requireProfile } from "@/lib/auth/session";
 import { getContactById, getContactActivity, getContactTasks } from "@/lib/data/contacts";
 import { PageTransition } from "@/components/shared/page-transition";
 import { ContactDetailHeader } from "@/components/contacts/contact-detail-header";
@@ -7,6 +8,8 @@ import { TaskMiniList } from "@/components/shared/task-mini-list";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 export default async function ContactDetailPage({ params }: { params: { id: string } }) {
+  await requireProfile();
+
   let contact;
   try {
     contact = await getContactById(params.id);
@@ -22,7 +25,11 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
 
   return (
     <PageTransition>
-      <ContactDetailHeader contact={contact} owner={contact.owner ?? null} account={contact.account ?? null} />
+      <ContactDetailHeader
+        contact={contact}
+        owner={contact.owner ?? null}
+        account={contact.account ?? null}
+      />
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-1">

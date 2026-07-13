@@ -6,7 +6,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const profile = await requireProfile();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
+    <div className="app-shell-gradient flex h-screen overflow-hidden">
       <Sidebar role={profile.role} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar profile={profile} />

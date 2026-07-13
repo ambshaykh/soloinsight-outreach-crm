@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 // Placeholder mark inspired by the Soloinsight brand icon (circular ring with
 // two stacked bars). Swap the <svg> below for the real logo asset whenever
-// it's available — everything else (sizing, "Soloinsight" wordmark) stays.
+// it's available — everything else (sizing, wordmark) stays.
 export function Logo({ className, mark = true, wordmark = true }: { className?: string; mark?: boolean; wordmark?: boolean }) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
@@ -14,9 +14,10 @@ export function Logo({ className, mark = true, wordmark = true }: { className?: 
         </svg>
       )}
       {wordmark && (
-        <span className="text-base font-semibold tracking-tight">
-          Soloinsight <span className="font-normal text-current/70">Outreach</span>
-        </span>
+        <div className="flex flex-col leading-none">
+          <span className="text-base font-semibold tracking-tight">Soloinsight</span>
+          <span className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-current/60">Outreach CRM</span>
+        </div>
       )}
     </div>
   );
