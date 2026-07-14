@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { portalForPath, PORTALS } from "@/lib/auth/portals";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback", "/invite", "/reset-password"];
+const PUBLIC_PATHS = ["/", "/portal", "/auth/callback", "/invite", "/reset-password", "/login"];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -27,11 +28,14 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
-  const isPublic = PUBLIC_PATHS.some((p) => path.startsWith(p));
+  const isPublic = PUBLIC_PATHS.some((p) => (p === "/" ? path === "/" : path.startsWith(p)));
 
+  // Not signed in and hitting a protected path: bounce to the login page for the
+  // portal that path belongs to (falls back to the portal selector if unknown).
   if (!user && !isPublic) {
+    const portal = portalForPath(path);
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = portal ? `/portal/${portal}/login` : "/";
     url.searchParams.set("redirect", path);
     return NextResponse.redirect(url);
   }
@@ -46,13 +50,22 @@ export async function updateSession(request: NextRequest) {
     if (!hasVerifiedFactor || aal?.currentLevel !== "aal2") {
       const url = request.nextUrl.clone();
       url.pathname = "/2fa/setup";
+      url.searchParams.set("redirect", path);
       return NextResponse.redirect(url);
     }
   }
 
+  // Signed in and revisiting a portal login page or the old /login shim: send them
+  // straight to that portal's home instead of showing the form again.
+  if (user && path.startsWith("/portal/") && path.endsWith("/login")) {
+    const slug = path.split("/")[2] as keyof typeof PORTALS | undefined;
+    const url = request.nextUrl.clone();
+    url.pathname = (slug && PORTALS[slug]?.home) || "/";
+    return NextResponse.redirect(url);
+  }
   if (user && path === "/login") {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile, UserRole } from "@/lib/types/database";
+import { canAccessPortal, PORTALS, type PortalSlug } from "@/lib/auth/portals";
 
 export async function getCurrentUser() {
   const supabase = createClient();
@@ -25,7 +26,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 /** Use in a Server Component / layout to hard-require a signed-in profile. */
 export async function requireProfile(): Promise<Profile> {
   const profile = await getCurrentProfile();
-  if (!profile) redirect("/login");
+  if (!profile) redirect("/");
   return profile;
 }
 
@@ -36,6 +37,28 @@ export async function requireRole(roles: UserRole[]): Promise<Profile> {
     redirect("/dashboard");
   }
   return profile;
+}
+
+/**
+ * Use at the top of every portal's layout.tsx. Requires a signed-in profile AND that the
+ * profile's role is allowed into this portal — otherwise bounces back to the portal
+ * selector with a `denied` flag so it can explain why.
+ */
+export async function requirePortalAccess(portal: PortalSlug): Promise<Profile> {
+  const profile = await requireProfile();
+  if (!canAccessPortal(profile.role, portal)) {
+    redirect(`/?denied=${portal}`);
+  }
+  return profile;
+}
+
+/** Where should this (already authenticated) profile land if they hit a generic entry point? */
+export function defaultHomeForRole(role: UserRole): string {
+  const order: PortalSlug[] = ["sales", "admin", "salesforce", "executive"];
+  for (const slug of order) {
+    if (canAccessPortal(role, slug)) return PORTALS[slug].home;
+  }
+  return "/account";
 }
 
 export function canManageTeam(role: UserRole) {

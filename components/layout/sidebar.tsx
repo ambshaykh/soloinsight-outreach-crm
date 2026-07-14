@@ -4,25 +4,28 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Building2, Users, ListChecks, CalendarClock,
-  Activity, BarChart3, Settings, ChevronRight,
+  Activity, BarChart3, ChevronRight, ArrowLeftRight,
 } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/lib/types/database";
+import { portalsForRole } from "@/lib/auth/portals";
 
+// Sales portal navigation only — Admin Center, Salesforce, and Executive
+// Dashboard each have their own dedicated shell/sidebar.
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "manager", "sdr", "executive", "salesforce_admin", "salesforce_viewer"] },
-  { href: "/accounts", label: "Accounts", icon: Building2, roles: ["admin", "manager", "sdr", "executive", "salesforce_admin", "salesforce_viewer"] },
-  { href: "/contacts", label: "Contacts", icon: Users, roles: ["admin", "manager", "sdr", "executive", "salesforce_admin", "salesforce_viewer"] },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "manager", "sdr", "salesforce_admin"] },
+  { href: "/accounts", label: "Accounts", icon: Building2, roles: ["admin", "manager", "sdr", "salesforce_admin"] },
+  { href: "/contacts", label: "Contacts", icon: Users, roles: ["admin", "manager", "sdr", "salesforce_admin"] },
   { href: "/outreach-queue", label: "Outreach Queue", icon: ListChecks, roles: ["admin", "manager", "sdr"] },
   { href: "/follow-ups", label: "Follow Ups", icon: CalendarClock, roles: ["admin", "manager", "sdr"] },
   { href: "/activities", label: "Activities", icon: Activity, roles: ["admin", "manager", "sdr"] },
-  { href: "/analytics", label: "Analytics", icon: BarChart3, roles: ["admin", "manager", "executive"] },
-  { href: "/settings", label: "Settings", icon: Settings, roles: ["admin", "manager", "sdr", "executive", "salesforce_admin", "salesforce_viewer"] },
+  { href: "/analytics", label: "Analytics", icon: BarChart3, roles: ["admin", "manager"] },
 ] as const;
 
 export function Sidebar({ role }: { role: UserRole }) {
   const pathname = usePathname();
+  const hasMultiplePortals = portalsForRole(role).length > 1;
 
   return (
     <aside className="hidden w-64 flex-col border-r border-white/5 bg-cg-navy1 lg:flex">
@@ -53,6 +56,16 @@ export function Sidebar({ role }: { role: UserRole }) {
           );
         })}
       </nav>
+
+      {hasMultiplePortals && (
+        <Link
+          href="/"
+          className="mx-3 mb-2 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-white/50 hover:bg-white/5 hover:text-white"
+        >
+          <ArrowLeftRight className="h-3.5 w-3.5" /> Switch portal
+        </Link>
+      )}
+
       <div className="mx-3 mb-4 rounded-lg border border-white/10 bg-white/5 p-3">
         <p className="text-[11px] font-medium text-white/70">Manual outreach only</p>
         <p className="mt-0.5 text-[10px] text-white/40">

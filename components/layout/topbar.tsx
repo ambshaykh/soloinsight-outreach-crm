@@ -86,10 +86,10 @@ export function Topbar({ profile }: { profile: Profile }) {
             <DropdownMenuLabel>{profile.email}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/settings"><UserCircle className="h-4 w-4" /> Profile settings</Link>
+              <Link href="/account"><UserCircle className="h-4 w-4" /> Profile settings</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/settings/security"><Settings className="h-4 w-4" /> Security</Link>
+              <Link href="/account/security"><Settings className="h-4 w-4" /> Security</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <form action={signOut} className="w-full">
