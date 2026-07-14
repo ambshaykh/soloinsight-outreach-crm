@@ -1,4 +1,4 @@
-import "server-only";
+
 
 // Salesforce OAuth 2.0 Web Server Flow (authorization code grant).
 // Docs: https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_web_server_flow.htm

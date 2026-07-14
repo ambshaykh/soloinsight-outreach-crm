@@ -1,4 +1,3 @@
-import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decryptSecret, encryptSecret } from "@/lib/crypto/secrets";
 import { refreshAccessToken } from "@/lib/salesforce/oauth";

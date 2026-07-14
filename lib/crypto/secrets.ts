@@ -1,4 +1,3 @@
-import "server-only";
 import crypto from "crypto";
 
 // Symmetric encryption for anything we have to store at rest that isn't a
