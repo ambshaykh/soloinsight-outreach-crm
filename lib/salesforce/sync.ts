@@ -57,6 +57,12 @@ export async function syncSalesforceOrg(orgId: string): Promise<{ ok: boolean; e
       .update({
         instance_url: refreshed.instance_url,
         access_token_encrypted: encryptSecret(refreshed.access_token),
+        // Salesforce can rotate the refresh token on any refresh call — if it
+        // sends a new one, we MUST persist it, or every subsequent refresh
+        // will fail with invalid_grant against the now-stale original token.
+        refresh_token_encrypted: refreshed.refresh_token
+          ? encryptSecret(refreshed.refresh_token)
+          : org.refresh_token_encrypted,
         status: "connected",
         last_synced_at: new Date().toISOString(),
         last_sync_error: null,
@@ -118,6 +124,9 @@ export async function getFreshAccessToken(
       .update({
         instance_url: refreshed.instance_url,
         access_token_encrypted: encryptSecret(refreshed.access_token),
+        refresh_token_encrypted: refreshed.refresh_token
+          ? encryptSecret(refreshed.refresh_token)
+          : org.refresh_token_encrypted,
         updated_at: new Date().toISOString(),
       })
       .eq("id", orgId);
