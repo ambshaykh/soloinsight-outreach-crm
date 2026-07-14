@@ -87,3 +87,43 @@ export async function syncAllConnectedOrgs(): Promise<{ orgId: string; result: A
   }
   return results;
 }
+
+/**
+ * Refreshes and returns a live access token + instance URL for an org
+ * without running a full campaign sync. Used by anything that needs to make
+ * a one-off Salesforce API call, like the schema discovery tool.
+ */
+export async function getFreshAccessToken(
+  orgId: string
+): Promise<{ instanceUrl: string; accessToken: string } | { error: string }> {
+  const admin = createAdminClient();
+  const { data: org, error: fetchError } = await admin
+    .from("salesforce_orgs")
+    .select("*")
+    .eq("id", orgId)
+    .single();
+
+  if (fetchError || !org) return { error: "Org not found." };
+  if (!org.consumer_key || !org.consumer_secret_encrypted || !org.refresh_token_encrypted) {
+    return { error: "This org isn't connected yet." };
+  }
+
+  try {
+    const consumerSecret = decryptSecret(org.consumer_secret_encrypted);
+    const refreshToken = decryptSecret(org.refresh_token_encrypted);
+    const refreshed = await refreshAccessToken({ consumerKey: org.consumer_key, consumerSecret, refreshToken });
+
+    await admin
+      .from("salesforce_orgs")
+      .update({
+        instance_url: refreshed.instance_url,
+        access_token_encrypted: encryptSecret(refreshed.access_token),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", orgId);
+
+    return { instanceUrl: refreshed.instance_url, accessToken: refreshed.access_token };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Unknown error refreshing token." };
+  }
+}

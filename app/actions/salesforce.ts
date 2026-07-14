@@ -7,7 +7,8 @@ import { requireProfile } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/auth/permissions";
 import { encryptSecret } from "@/lib/crypto/secrets";
 import { buildAuthorizeUrl } from "@/lib/salesforce/oauth";
-import { syncSalesforceOrg } from "@/lib/salesforce/sync";
+import { syncSalesforceOrg, getFreshAccessToken } from "@/lib/salesforce/sync";
+import { discoverEmailTrackingSchema, type SchemaDiscoveryObject } from "@/lib/salesforce/schema-discovery";
 
 async function requireManageConnections() {
   const profile = await requireProfile();
@@ -155,4 +156,29 @@ export async function syncSalesforceOrgNow(orgId: string) {
 
   revalidatePath("/salesforce");
   return result;
+}
+
+export async function discoverSalesforceEmailSchema(
+  orgId: string
+): Promise<{ error: string | null; result?: SchemaDiscoveryObject[] }> {
+  await requireManageConnections();
+
+  const token = await getFreshAccessToken(orgId);
+  if ("error" in token) return { error: token.error };
+
+  try {
+    const result = await discoverEmailTrackingSchema(token.instanceUrl, token.accessToken);
+
+    const supabase = createClient();
+    await supabase.rpc("log_audit_event", {
+      p_action: "salesforce_org.schema_discovery",
+      p_entity_type: "salesforce_org",
+      p_entity_id: orgId,
+      p_metadata: { objects_found: result.map((r) => r.objectName) },
+    });
+
+    return { error: null, result };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Schema discovery failed." };
+  }
 }

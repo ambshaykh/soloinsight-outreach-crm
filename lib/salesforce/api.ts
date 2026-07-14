@@ -1,5 +1,4 @@
 
-
 const API_VERSION = "v59.0";
 
 /** Runs a SOQL query against a connected org, following pagination automatically. */
@@ -70,4 +69,38 @@ export async function verifyConnection(instanceUrl: string, accessToken: string)
     const text = await res.text();
     throw new Error(`Salesforce connection check failed (${res.status}): ${text}`);
   }
+}
+
+export type SObjectSummary = { name: string; label: string; custom: boolean };
+
+/** Global describe — lists every object the connected user can see, standard and custom. */
+export async function listSObjects(instanceUrl: string, accessToken: string): Promise<SObjectSummary[]> {
+  const res = await fetch(`${instanceUrl}/services/data/${API_VERSION}/sobjects`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Salesforce global describe failed (${res.status}): ${text}`);
+  }
+  const data = await res.json();
+  return (data.sobjects ?? []).map((o: any) => ({ name: o.name, label: o.label, custom: !!o.custom }));
+}
+
+export type FieldSummary = { name: string; label: string; type: string };
+
+/** Describes a single object's fields (name/label/type only — enough to eyeball what's available). */
+export async function describeObjectFields(
+  instanceUrl: string,
+  accessToken: string,
+  objectName: string
+): Promise<FieldSummary[]> {
+  const res = await fetch(`${instanceUrl}/services/data/${API_VERSION}/sobjects/${objectName}/describe`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Salesforce describe failed for ${objectName} (${res.status}): ${text}`);
+  }
+  const data = await res.json();
+  return (data.fields ?? []).map((f: any) => ({ name: f.name, label: f.label, type: f.type }));
 }

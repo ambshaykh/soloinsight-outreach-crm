@@ -2,6 +2,7 @@ import { CheckCircle2, AlertTriangle, Users, Megaphone, MessageSquareReply, Info
 import { hasPermission } from "@/lib/auth/permissions";
 import { listSalesforceOrgStatuses, listSalesforceCampaignStats } from "@/app/actions/salesforce";
 import { OrgConnections } from "@/components/salesforce/org-connections";
+import { SchemaDiscoveryPanel } from "@/components/salesforce/schema-discovery-panel";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
@@ -82,14 +83,17 @@ export default async function SalesforcePortalHome({
       </Card>
 
       <Card className="mb-6 border-amber-200 bg-amber-50/50">
-        <CardContent className="flex items-start gap-3 p-5">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-          <p className="text-xs text-amber-800">
-            <strong>Emails sent, bounce rate, and unsubscribes aren't synced yet.</strong> Vanilla Salesforce
-            Campaigns don't track those out of the box — it depends on whether your orgs send campaign email via
-            classic Mass Email, Lightning "List Email," or something custom. Once the first org is connected, we'll
-            check its actual schema together and wire up the right fields rather than guessing.
-          </p>
+        <CardContent className="p-5">
+          <div className="flex items-start gap-3">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+            <p className="text-xs text-amber-800">
+              <strong>Emails sent, bounce rate, and unsubscribes aren't synced yet.</strong> Vanilla Salesforce
+              Campaigns don't track those out of the box — it depends on whether your orgs send campaign email via
+              classic Mass Email, Lightning "List Email," or something custom. Run the scan below against a
+              connected org to see what's actually there.
+            </p>
+          </div>
+          <SchemaDiscoveryPanel orgs={orgs.filter((o: any) => o.status === "connected").map((o: any) => ({ id: o.id, label: o.label }))} />
         </CardContent>
       </Card>
 
