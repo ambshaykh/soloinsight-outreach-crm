@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Loader2, Mail, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,9 +16,9 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [hasSession, setHasSession] = useState<boolean | null>(null);
 
-  useState(() => {
-    createClient().auth.getSession().then(({ data }) => setHasSession(!!data.session));
-  });
+useEffect(() => {
+  createClient().auth.getSession().then(({ data }) => setHasSession(!!data.session));
+}, []);
 
   function handleRequest(formData: FormData) {
     setError(null);
