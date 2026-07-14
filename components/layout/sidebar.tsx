@@ -11,14 +11,14 @@ import { cn } from "@/lib/utils";
 import type { UserRole } from "@/lib/types/database";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "manager", "sdr"] },
-  { href: "/accounts", label: "Accounts", icon: Building2, roles: ["admin", "manager", "sdr"] },
-  { href: "/contacts", label: "Contacts", icon: Users, roles: ["admin", "manager", "sdr"] },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "manager", "sdr", "executive", "salesforce_admin", "salesforce_viewer"] },
+  { href: "/accounts", label: "Accounts", icon: Building2, roles: ["admin", "manager", "sdr", "executive", "salesforce_admin", "salesforce_viewer"] },
+  { href: "/contacts", label: "Contacts", icon: Users, roles: ["admin", "manager", "sdr", "executive", "salesforce_admin", "salesforce_viewer"] },
   { href: "/outreach-queue", label: "Outreach Queue", icon: ListChecks, roles: ["admin", "manager", "sdr"] },
   { href: "/follow-ups", label: "Follow Ups", icon: CalendarClock, roles: ["admin", "manager", "sdr"] },
   { href: "/activities", label: "Activities", icon: Activity, roles: ["admin", "manager", "sdr"] },
-  { href: "/analytics", label: "Analytics", icon: BarChart3, roles: ["admin", "manager"] },
-  { href: "/settings", label: "Settings", icon: Settings, roles: ["admin", "manager", "sdr"] },
+  { href: "/analytics", label: "Analytics", icon: BarChart3, roles: ["admin", "manager", "executive"] },
+  { href: "/settings", label: "Settings", icon: Settings, roles: ["admin", "manager", "sdr", "executive", "salesforce_admin", "salesforce_viewer"] },
 ] as const;
 
 export function Sidebar({ role }: { role: UserRole }) {

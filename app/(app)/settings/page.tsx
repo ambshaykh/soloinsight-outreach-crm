@@ -10,7 +10,7 @@ import { SecurityStatusBadge } from "@/components/shared/security-status-badge";
 import { DataImportExport } from "@/components/settings/data-import-export";
 import { ROLE_LABELS } from "@/lib/constants";
 import { updateOwnProfile, createTeam } from "@/app/actions/users";
-import { Users, ShieldCheck, Database, Building } from "lucide-react";
+import { Users, ShieldCheck, Database, Building, KeyRound } from "lucide-react";
 
 export default async function SettingsPage() {
   const profile = await requireProfile();
@@ -74,6 +74,18 @@ export default async function SettingsPage() {
             <Link href="/settings/users"><Button variant="secondary">Open user management</Button></Link>
           </CardContent>
         </Card>
+
+        {profile.role === "admin" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-primary" /> Roles &amp; Permissions</CardTitle>
+              <CardDescription>Control exactly what each role can see and do.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/settings/roles"><Button variant="secondary">Open permission matrix</Button></Link>
+            </CardContent>
+          </Card>
+        )}
 
         {canManage && (
           <Card>

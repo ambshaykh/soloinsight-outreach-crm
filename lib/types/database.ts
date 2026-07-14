@@ -2,7 +2,7 @@
 // If you regenerate with `supabase gen types typescript`, this file's shape
 // (and every import site) should stay compatible.
 
-export type UserRole = "admin" | "manager" | "sdr";
+export type UserRole = "admin" | "manager" | "sdr" | "executive" | "salesforce_admin" | "salesforce_viewer";
 
 export type AccountStatus =
   | "new" | "assigned" | "in_progress" | "engaged" | "meeting_booked"

@@ -4,6 +4,9 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   admin: "Admin",
   manager: "Manager",
   sdr: "SDR",
+  executive: "Executive",
+  salesforce_admin: "Salesforce Admin",
+  salesforce_viewer: "Salesforce Viewer",
 };
 
 export const ACCOUNT_STATUS_LABELS: Record<AccountStatus, string> = {
