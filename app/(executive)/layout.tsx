@@ -1,7 +1,33 @@
+import Link from "next/link";
+import { ArrowLeftRight, LogOut } from "lucide-react";
 import { requirePortalAccess } from "@/lib/auth/session";
-import { PortalPlaceholderShell } from "@/components/portals/portal-placeholder-shell";
+import { Logo } from "@/components/shared/logo";
+import { signOut } from "@/app/actions/auth";
+import { portalsForRole } from "@/lib/auth/portals";
 
 export default async function ExecutivePortalLayout({ children }: { children: React.ReactNode }) {
   const profile = await requirePortalAccess("executive");
-  return <PortalPlaceholderShell profile={profile}>{children}</PortalPlaceholderShell>;
+  const hasMultiplePortals = portalsForRole(profile.role).length > 1;
+
+  return (
+    <div className="min-h-screen bg-[#FFF7ED]">
+      <header className="flex h-16 items-center justify-between border-b border-amber-100 bg-white/80 px-6 backdrop-blur">
+        <Logo className="text-[#0F1419]" />
+        <div className="flex items-center gap-4 text-xs font-medium text-[#6B7280]">
+          <Link href="/account" className="hover:text-[#0F1419]">Account</Link>
+          {hasMultiplePortals && (
+            <Link href="/" className="flex items-center gap-1.5 hover:text-[#0F1419]">
+              <ArrowLeftRight className="h-3.5 w-3.5" /> Switch portal
+            </Link>
+          )}
+          <form action={signOut}>
+            <button type="submit" className="flex items-center gap-1.5 text-rose-600 hover:text-rose-700">
+              <LogOut className="h-3.5 w-3.5" /> Sign out
+            </button>
+          </form>
+        </div>
+      </header>
+      <main className="p-6">{children}</main>
+    </div>
+  );
 }
