@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[functions]
+  directory = "netlify/functions"
+
+# Runs every 30 minutes. Cron syntax: minute hour day month weekday.
+[functions."salesforce-sync"]
+  schedule = "*/30 * * * *"
