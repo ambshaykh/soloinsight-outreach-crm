@@ -1,3 +1,4 @@
+import { preferenceAttrs } from "@/lib/utils";
 import Link from "next/link";
 import { ArrowLeftRight, LogOut } from "lucide-react";
 import { requirePortalAccess } from "@/lib/auth/session";

@@ -1,3 +1,4 @@
+import { preferenceAttrs } from "@/lib/utils";
 import { requirePortalAccess } from "@/lib/auth/session";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
