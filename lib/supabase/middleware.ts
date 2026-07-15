@@ -40,20 +40,13 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && !isPublic && path !== "/2fa/setup") {
-    // Determine the session's Authenticator Assurance Level. Supabase issues
-    // aal2 only after a TOTP factor has been verified for this session.
-    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    const { data: factors } = await supabase.auth.mfa.listFactors();
-    const hasVerifiedFactor = (factors?.totp ?? []).some((f) => f.status === "verified");
-
-    if (!hasVerifiedFactor || aal?.currentLevel !== "aal2") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/2fa/setup";
-      url.searchParams.set("redirect", path);
-      return NextResponse.redirect(url);
-    }
-  }
+  // NOTE: mandatory-TOTP enforcement used to live here (redirect to
+  // /2fa/setup unless the session had a verified aal2 factor). Retired as
+  // part of Phase 6 — Google Sign-In + a mandatory passkey replace it as the
+  // primary security model; TOTP is still available at /account/security
+  // for anyone who wants to keep using it, just no longer force-enrolled or
+  // required to reach the app. See supabase/migrations/0008_google_sso_passkey.sql
+  // for the matching has_verified_mfa() change (RLS no longer requires aal2).
 
   // Signed in and revisiting a portal login page or the old /login shim: send them
   // straight to that portal's home instead of showing the form again.

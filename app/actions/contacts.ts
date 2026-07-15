@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth/session";
 import type { ContactStatus, PriorityLevel } from "@/lib/types/database";
+import { sendNotification } from "@/lib/notifications/send";
 
 export async function createContact(formData: FormData) {
   const profile = await requireProfile();
@@ -43,10 +44,12 @@ export async function createContact(formData: FormData) {
 export async function updateContactStatus(contactId: string, status: ContactStatus) {
   await requireProfile();
   const supabase = createClient();
+  const { data: before } = await supabase.from("contacts").select("status").eq("id", contactId).single();
   const { error } = await supabase.from("contacts").update({ status }).eq("id", contactId);
   if (error) return { error: error.message };
   await supabase.rpc("log_audit_event", {
-    p_action: "contact.status_changed", p_entity_type: "contact", p_entity_id: contactId, p_metadata: { status },
+    p_action: "contact.status_changed", p_entity_type: "contact", p_entity_id: contactId,
+    p_metadata: { before: before?.status ?? null, after: status },
   });
   revalidatePath("/contacts");
   revalidatePath("/outreach-queue");
@@ -67,13 +70,28 @@ export async function updateContactPriority(contactId: string, priority: Priorit
 }
 
 export async function assignContactOwner(contactId: string, ownerId: string) {
-  await requireProfile();
+  const actor = await requireProfile();
   const supabase = createClient();
+  const { data: before } = await supabase.from("contacts").select("owner_id, first_name, last_name").eq("id", contactId).single();
   const { error } = await supabase.from("contacts").update({ owner_id: ownerId }).eq("id", contactId);
   if (error) return { error: error.message };
   await supabase.rpc("log_audit_event", {
-    p_action: "contact.owner_assigned", p_entity_type: "contact", p_entity_id: contactId, p_metadata: { owner_id: ownerId },
+    p_action: "contact.owner_assigned", p_entity_type: "contact", p_entity_id: contactId,
+    p_metadata: { before: before?.owner_id ?? null, after: ownerId },
   });
+
+  if (ownerId && ownerId !== actor.id) {
+    const name = before ? `${before.first_name} ${before.last_name}` : "A contact";
+    await sendNotification({
+      recipientId: ownerId,
+      eventKey: "contact.assigned",
+      fallbackTitle: `${name} was assigned to you`,
+      fallbackBody: `${actor.full_name} assigned you this contact.`,
+      vars: { contact: name, actor: actor.full_name },
+      link: `/contacts/${contactId}`,
+    });
+  }
+
   revalidatePath("/contacts");
   return { error: null };
 }

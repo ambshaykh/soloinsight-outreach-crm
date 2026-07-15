@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { decryptSecret, encryptSecret } from "@/lib/crypto/secrets";
 import { refreshAccessToken } from "@/lib/salesforce/oauth";
 import { fetchCampaignSummaries, verifyConnection } from "@/lib/salesforce/api";
+import { sendNotificationAsAdmin } from "@/lib/notifications/send-admin";
 
 /**
  * Core sync routine for a single connected org: refreshes the access token,
@@ -77,6 +78,25 @@ export async function syncSalesforceOrg(orgId: string): Promise<{ ok: boolean; e
       .from("salesforce_orgs")
       .update({ status: "error", last_sync_error: message, updated_at: new Date().toISOString() })
       .eq("id", orgId);
+
+    // Tell whoever can actually fix this — admins and Salesforce admins —
+    // rather than letting a sync failure sit silently until someone happens
+    // to open the Salesforce portal.
+    const { data: recipients } = await admin
+      .from("profiles")
+      .select("id")
+      .in("role", ["admin", "salesforce_admin"]);
+    for (const r of recipients ?? []) {
+      await sendNotificationAsAdmin(admin, {
+        recipientId: r.id,
+        eventKey: "salesforce.sync_failed",
+        fallbackTitle: `Salesforce sync failed for ${org.label ?? "an org"}`,
+        fallbackBody: message,
+        vars: { org: org.label ?? "the org", error: message },
+        link: "/salesforce",
+      });
+    }
+
     return { ok: false, error: message };
   }
 }

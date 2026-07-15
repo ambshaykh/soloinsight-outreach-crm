@@ -30,6 +30,9 @@ type DashboardData = {
   teamActivity: any[];
   topPriority: { accounts: any[]; contacts: any[] };
   salesforceSummary: { totalLeads: number; campaignsSynced: number; totalResponses: number };
+  kpis?: Record<string, any>;
+  activityTrend?: { value: number }[];
+  topReps?: any[];
 };
 
 export function DashboardGrid({

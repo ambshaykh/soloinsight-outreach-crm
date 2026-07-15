@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth/session";
 import type { AccountStatus, PriorityLevel } from "@/lib/types/database";
+import { sendNotification } from "@/lib/notifications/send";
 
 export async function createAccount(formData: FormData) {
   const profile = await requireProfile();
@@ -40,13 +41,29 @@ export async function createAccount(formData: FormData) {
 }
 
 export async function updateAccountStatus(accountId: string, status: AccountStatus) {
-  await requireProfile();
+  const actor = await requireProfile();
   const supabase = createClient();
+  const { data: before } = await supabase.from("accounts").select("status, company_name, owner_id").eq("id", accountId).single();
   const { error } = await supabase.from("accounts").update({ status }).eq("id", accountId);
   if (error) return { error: error.message };
+
   await supabase.rpc("log_audit_event", {
-    p_action: "account.status_changed", p_entity_type: "account", p_entity_id: accountId, p_metadata: { status },
+    p_action: "account.status_changed", p_entity_type: "account", p_entity_id: accountId,
+    p_metadata: { before: before?.status ?? null, after: status, company_name: before?.company_name },
   });
+
+  // Notify the account's owner (if it's not the person making the change).
+  if (before?.owner_id && before.owner_id !== actor.id) {
+    await sendNotification({
+      recipientId: before.owner_id,
+      eventKey: "account.status_changed",
+      fallbackTitle: `${before.company_name} moved to a new stage`,
+      fallbackBody: `${actor.full_name} changed the status to "${status.replace(/_/g, " ")}".`,
+      vars: { account: before.company_name, actor: actor.full_name, status: status.replace(/_/g, " ") },
+      link: `/accounts/${accountId}`,
+    });
+  }
+
   revalidatePath("/accounts");
   return { error: null };
 }
@@ -54,23 +71,40 @@ export async function updateAccountStatus(accountId: string, status: AccountStat
 export async function updateAccountPriority(accountId: string, priority: PriorityLevel) {
   await requireProfile();
   const supabase = createClient();
+  const { data: before } = await supabase.from("accounts").select("priority").eq("id", accountId).single();
   const { error } = await supabase.from("accounts").update({ priority }).eq("id", accountId);
   if (error) return { error: error.message };
   await supabase.rpc("log_audit_event", {
-    p_action: "account.priority_changed", p_entity_type: "account", p_entity_id: accountId, p_metadata: { priority },
+    p_action: "account.priority_changed", p_entity_type: "account", p_entity_id: accountId,
+    p_metadata: { before: before?.priority ?? null, after: priority },
   });
   revalidatePath("/accounts");
   return { error: null };
 }
 
 export async function assignAccountOwner(accountId: string, ownerId: string) {
-  await requireProfile();
+  const actor = await requireProfile();
   const supabase = createClient();
+  const { data: before } = await supabase.from("accounts").select("owner_id, company_name").eq("id", accountId).single();
   const { error } = await supabase.from("accounts").update({ owner_id: ownerId }).eq("id", accountId);
   if (error) return { error: error.message };
+
   await supabase.rpc("log_audit_event", {
-    p_action: "account.owner_assigned", p_entity_type: "account", p_entity_id: accountId, p_metadata: { owner_id: ownerId },
+    p_action: "account.owner_assigned", p_entity_type: "account", p_entity_id: accountId,
+    p_metadata: { before: before?.owner_id ?? null, after: ownerId, company_name: before?.company_name },
   });
+
+  if (ownerId && ownerId !== actor.id) {
+    await sendNotification({
+      recipientId: ownerId,
+      eventKey: "account.assigned",
+      fallbackTitle: `${before?.company_name ?? "An account"} was assigned to you`,
+      fallbackBody: `${actor.full_name} assigned you this account.`,
+      vars: { account: before?.company_name ?? "An account", actor: actor.full_name },
+      link: `/accounts/${accountId}`,
+    });
+  }
+
   revalidatePath("/accounts");
   return { error: null };
 }

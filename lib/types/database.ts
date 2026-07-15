@@ -38,8 +38,16 @@ export interface Profile {
   two_factor_enabled: boolean;
   avatar_url: string | null;
   is_active: boolean;
+  preferences: UserPreferences;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserPreferences {
+  timezone?: string;
+  density?: "comfortable" | "compact";
+  high_contrast?: boolean;
+  reduced_motion?: boolean;
 }
 
 export interface Team {

@@ -11,3 +11,7 @@
 # Runs every 30 minutes. Cron syntax: minute hour day month weekday.
 [functions."salesforce-sync"]
   schedule = "*/30 * * * *"
+
+# Runs every 6 hours. Cron syntax: minute hour day month weekday.
+[functions."overdue-tasks-check"]
+  schedule = "0 */6 * * *"

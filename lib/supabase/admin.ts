@@ -1,4 +1,3 @@
-
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 // SERVICE ROLE client — bypasses RLS entirely. Never import this into any
@@ -15,6 +14,12 @@ export function createAdminClient() {
   }
 
   return createSupabaseClient(url, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      // Needed for auth.admin.passkey.* (listing/revoking a user's passkeys
+      // from the Admin Center) — same experimental opt-in as the other clients.
+      experimental: { passkey: true },
+    },
   });
 }

@@ -45,3 +45,28 @@ html, body {
   background-size: 200% 200%;
   animation: gradientPan 14s ease infinite;
 }
+
+/* Phase 5 — per-user UI preferences (Account > Preferences). Applied via a
+   data attribute on the portal's <main>, read server-side from
+   profiles.preferences, so there's no client-side flash before it applies. */
+[data-reduced-motion="true"] *,
+[data-reduced-motion="true"] *::before,
+[data-reduced-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+[data-contrast="high"] {
+  --tw-border-opacity: 1 !important;
+}
+[data-contrast="high"] .border-slate-100 { border-color: #94A3B8 !important; }
+[data-contrast="high"] .border-slate-200 { border-color: #64748B !important; }
+[data-contrast="high"] .text-\[\#6B7280\] { color: #374151 !important; }
+[data-contrast="high"] .text-\[\#8B95A5\] { color: #374151 !important; }
+
+[data-density="compact"] .p-6 { padding: 1rem !important; }
+[data-density="compact"] .p-5 { padding: 0.875rem !important; }
+[data-density="compact"] .gap-6 { gap: 1rem !important; }
+[data-density="compact"] .space-y-6 > * + * { margin-top: 1rem !important; }

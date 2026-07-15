@@ -11,6 +11,12 @@ export function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      auth: {
+        // Same experimental opt-in as lib/supabase/client.ts — needed here too
+        // since account management (listing/renaming/deleting passkeys) runs
+        // through this server client.
+        experimental: { passkey: true },
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll();

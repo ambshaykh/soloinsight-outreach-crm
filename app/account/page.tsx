@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { SecurityStatusBadge } from "@/components/shared/security-status-badge";
+import { PreferencesForm } from "@/components/settings/preferences-form";
 import { ROLE_LABELS } from "@/lib/constants";
 import { PORTALS, portalsForRole } from "@/lib/auth/portals";
 import { updateOwnProfile } from "@/app/actions/users";
-import { ShieldCheck, LayoutGrid } from "lucide-react";
+import { ShieldCheck, LayoutGrid, SlidersHorizontal } from "lucide-react";
 
 export default async function AccountPage() {
   const profile = await requireProfile();
@@ -50,7 +51,7 @@ export default async function AccountPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> Security</CardTitle>
-            <CardDescription>Two-factor authentication is mandatory for every account.</CardDescription>
+            <CardDescription>Optional extra layer on top of your passkey or Google Sign-In.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5">
@@ -58,6 +59,16 @@ export default async function AccountPage() {
               <SecurityStatusBadge enabled={profile.two_factor_enabled} />
             </div>
             <Link href="/account/security"><Button variant="secondary">Manage security settings</Button></Link>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><SlidersHorizontal className="h-4 w-4 text-primary" /> Preferences</CardTitle>
+            <CardDescription>UI defaults that apply only to your account, across every portal.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PreferencesForm preferences={profile.preferences ?? {}} />
           </CardContent>
         </Card>
 

@@ -15,12 +15,17 @@ import { AccountFormDialog } from "@/components/accounts/account-form-dialog";
 import { ContactFormDialog } from "@/components/contacts/contact-form-dialog";
 import { LogActivityModal } from "@/components/activities/log-activity-modal";
 import { DataImportExport } from "@/components/settings/data-import-export";
+import { NotificationsBell } from "@/components/shared/notifications-bell";
 import { initials } from "@/lib/utils";
 import { ROLE_LABELS } from "@/lib/constants";
 import { signOut } from "@/app/actions/auth";
 import type { Profile } from "@/lib/types/database";
 
-export function Topbar({ profile }: { profile: Profile }) {
+type NotificationRow = { id: string; event_key: string; title: string; body: string | null; link: string | null; read_at: string | null; created_at: string };
+
+export function Topbar({
+  profile, notifications = [], unreadCount = 0,
+}: { profile: Profile; notifications?: NotificationRow[]; unreadCount?: number }) {
   const [logType, setLogType] = useState<"email" | "call" | null>(null);
   const [addAccountOpen, setAddAccountOpen] = useState(false);
   const [addContactOpen, setAddContactOpen] = useState(false);
@@ -65,6 +70,8 @@ export function Topbar({ profile }: { profile: Profile }) {
             <DropdownMenuItem onSelect={() => setAddContactOpen(true)}>Add Contact</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <NotificationsBell initialNotifications={notifications} initialUnreadCount={unreadCount} />
 
         <div className="mx-2 hidden lg:block">
           <SecurityStatusBadge enabled={profile.two_factor_enabled} />

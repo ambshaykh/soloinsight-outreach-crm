@@ -51,3 +51,11 @@ export function daysSince(iso: string | null | undefined): number | null {
 export function fullName(first: string, last: string): string {
   return `${first} ${last}`.trim();
 }
+
+export function preferenceAttrs(preferences: { density?: string; high_contrast?: boolean; reduced_motion?: boolean } | null | undefined) {
+  return {
+    "data-density": preferences?.density === "compact" ? "compact" : "comfortable",
+    "data-contrast": preferences?.high_contrast ? "high" : "normal",
+    "data-reduced-motion": preferences?.reduced_motion ? "true" : "false",
+  } as const;
+}

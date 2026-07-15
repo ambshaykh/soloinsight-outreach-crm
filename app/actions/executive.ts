@@ -62,7 +62,31 @@ export async function getExecutiveDashboardData() {
     totalResponses: salesforceStats.reduce((sum: number, s: any) => sum + (s.responded_count ?? 0), 0),
   };
 
+  // Real week-over-week delta on outreach volume, computed from the same
+  // 30-day daily series Analytics already builds — no extra query needed,
+  // and no invented numbers.
+  const last7 = analytics.activityByDay.slice(-7).reduce((sum, d) => sum + d.count, 0);
+  const prior7 = analytics.activityByDay.slice(-14, -7).reduce((sum, d) => sum + d.count, 0);
+  const activityDelta = prior7 > 0 ? Math.round(((last7 - prior7) / prior7) * 100) : null;
+
+  const kpis = {
+    totalProspects: dashboard.metrics.totalProspects,
+    accountsInProgress: dashboard.metrics.accountsInProgress,
+    meetingsBooked: dashboard.metrics.meetingsBooked,
+    hotProspects: dashboard.metrics.hotProspects,
+    staleProspects: dashboard.metrics.staleProspects,
+    replyRate: analytics.summary.replyRate,
+    last7DayActivity: last7,
+    activityDelta,
+  };
+
+  const topReps = analytics.perUser.slice(0, 3);
+  const activityTrend = analytics.activityByDay.slice(-14).map((d) => ({ value: d.count }));
+
   return {
+    kpis,
+    activityTrend,
+    topReps,
     pipeline: dashboard.charts.pipelineByStatus,
     teamActivity: analytics.perUser,
     topPriority,

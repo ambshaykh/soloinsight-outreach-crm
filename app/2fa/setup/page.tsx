@@ -111,7 +111,7 @@ function TwoFactorSetupInner() {
               {step === "verify-existing" ? "Verify your identity" : "Set up two-factor authentication"}
             </h1>
             <p className="text-xs text-[#6B7280]">
-              Required before you can access the CRM.
+              Optional now — adds an extra step on top of your passkey or Google Sign-In.
             </p>
           </div>
         </div>

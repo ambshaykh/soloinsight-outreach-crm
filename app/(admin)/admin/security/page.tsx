@@ -1,23 +1,34 @@
 import { requireProfile } from "@/lib/auth/session";
-import { listProfiles, listAuditLogs } from "@/lib/data/profiles";
+import { listProfiles } from "@/lib/data/profiles";
+import { listAuditLogsForReview } from "@/lib/data/audit";
 import { PageTransition } from "@/components/shared/page-transition";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { SecurityStatusBadge } from "@/components/shared/security-status-badge";
-import { formatDateTime } from "@/lib/utils";
-import { ShieldCheck, ScrollText } from "lucide-react";
+import { StatTile } from "@/components/shared/stat-tile";
+import { AuditLogTable } from "@/components/settings/audit-log-table";
+import { ShieldCheck, ScrollText, Activity, Users } from "lucide-react";
 
 export default async function AdminSecurityPage() {
   await requireProfile();
 
-  const [profiles, auditLogs] = await Promise.all([listProfiles(), listAuditLogs(100)]);
+  const [profiles, auditLogs] = await Promise.all([listProfiles(), listAuditLogsForReview(500)]);
   const enabledCount = profiles.filter((p) => p.two_factor_enabled).length;
+  const last24h = auditLogs.filter((l: any) => Date.now() - new Date(l.created_at).getTime() < 86400000).length;
+  const uniqueActors = new Set(auditLogs.map((l: any) => l.user?.full_name).filter(Boolean)).size;
 
   return (
     <PageTransition>
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-[#0F1419]">Security & audit</h1>
         <p className="text-sm text-[#6B7280]">Two-factor enforcement and the full access audit trail.</p>
+      </div>
+
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatTile icon={ShieldCheck} label="2FA enabled" value={enabledCount} sublabel={`of ${profiles.length}`} tone={enabledCount === profiles.length ? "success" : "warning"} />
+        <StatTile icon={ScrollText} label="Events loaded" value={auditLogs.length} sublabel="most recent 500" tone="neutral" />
+        <StatTile icon={Activity} label="Last 24 hours" value={last24h} tone="primary" />
+        <StatTile icon={Users} label="Active actors" value={uniqueActors} sublabel="in loaded window" tone="neutral" />
       </div>
 
       <Card>
@@ -45,25 +56,14 @@ export default async function AdminSecurityPage() {
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><ScrollText className="h-4 w-4 text-primary" /> Security audit log</CardTitle>
-          <CardDescription>Every login, role change, and sensitive action, timestamped.</CardDescription>
+          <CardTitle className="flex items-center gap-2"><ScrollText className="h-4 w-4 text-primary" /> Audit log</CardTitle>
+          <CardDescription>
+            Every login, role change, and sensitive action, with before/after detail where available. Filter, expand a
+            row for the diff, and export to CSV.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow><TableHead>When</TableHead><TableHead>User</TableHead><TableHead>Action</TableHead><TableHead>Details</TableHead></TableRow>
-            </TableHeader>
-            <TableBody>
-              {auditLogs.map((log: any) => (
-                <TableRow key={log.id}>
-                  <TableCell className="text-xs text-[#6B7280]">{formatDateTime(log.created_at)}</TableCell>
-                  <TableCell className="text-sm">{log.user?.full_name ?? "System"}</TableCell>
-                  <TableCell className="text-sm font-medium">{log.action}</TableCell>
-                  <TableCell className="text-xs text-[#6B7280]">{JSON.stringify(log.metadata)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <AuditLogTable logs={auditLogs as any} />
         </CardContent>
       </Card>
     </PageTransition>

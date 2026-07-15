@@ -11,8 +11,15 @@ export function TopPriorityWidget({ data }: { data: TopPriorityData }) {
   if (data.accounts.length === 0 && data.contacts.length === 0) {
     return <p className="py-8 text-center text-sm text-[#6B7280]">Nothing marked high or urgent priority right now.</p>;
   }
+  const urgentCount = data.accounts.filter((a) => a.priority === "urgent").length + data.contacts.filter((c) => c.priority === "urgent").length;
+
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div>
+      <p className="mb-3 text-xs text-[#6B7280]">
+        <span className="font-semibold text-[#0F1419]">{data.accounts.length + data.contacts.length}</span> items flagged ·{" "}
+        <span className="font-semibold text-rose-600">{urgentCount}</span> urgent
+      </p>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Accounts</p>
         <ul className="space-y-1.5">
@@ -37,6 +44,7 @@ export function TopPriorityWidget({ data }: { data: TopPriorityData }) {
             </li>
           ))}
         </ul>
+      </div>
       </div>
     </div>
   );

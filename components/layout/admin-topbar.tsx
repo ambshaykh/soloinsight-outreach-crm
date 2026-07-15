@@ -7,16 +7,23 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { NotificationsBell } from "@/components/shared/notifications-bell";
 import { initials } from "@/lib/utils";
 import { ROLE_LABELS } from "@/lib/constants";
 import { signOut } from "@/app/actions/auth";
 import type { Profile } from "@/lib/types/database";
 
-export function AdminTopbar({ profile }: { profile: Profile }) {
+type NotificationRow = { id: string; event_key: string; title: string; body: string | null; link: string | null; read_at: string | null; created_at: string };
+
+export function AdminTopbar({
+  profile, notifications = [], unreadCount = 0,
+}: { profile: Profile; notifications?: NotificationRow[]; unreadCount?: number }) {
   return (
     <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-6 backdrop-blur">
       <span className="text-sm font-semibold text-[#0F1419]">Admin Center</span>
 
+      <div className="flex items-center gap-2">
+      <NotificationsBell initialNotifications={notifications} initialUnreadCount={unreadCount} />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-100">
@@ -47,6 +54,7 @@ export function AdminTopbar({ profile }: { profile: Profile }) {
           </form>
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>
     </header>
   );
 }

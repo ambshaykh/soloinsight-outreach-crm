@@ -3,7 +3,7 @@
 import { Suspense, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Loader2, ShieldCheck, Lock, Mail, ArrowLeft } from "lucide-react";
+import { Loader2, ShieldCheck, Lock, Mail, ArrowLeft, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,15 +11,26 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/shared/logo";
 import { signInToPortal } from "@/app/actions/auth";
 import { PORTALS, type PortalSlug } from "@/lib/auth/portals";
+import { GoogleSignInButton } from "@/components/auth/google-signin-button";
+import { PasskeySignInButton } from "@/components/auth/passkey-signin-button";
 
 function PortalLoginForm({ portal }: { portal: PortalSlug }) {
   const router = useRouter();
   const params = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const config = PORTALS[portal];
 
   const deniedFor = params.get("denied");
+  const deniedMessage =
+    deniedFor === "not_invited"
+      ? "That Google account hasn't been invited to this CRM. Ask your admin for an invite."
+      : deniedFor === "oauth_error"
+      ? "Google sign-in didn't complete. Please try again."
+      : deniedFor
+      ? `Your account doesn't have access to the ${PORTALS[deniedFor as PortalSlug]?.name ?? deniedFor} portal.`
+      : null;
 
   function handleSubmit(formData: FormData) {
     setError(null);
@@ -117,44 +128,65 @@ function PortalLoginForm({ portal }: { portal: PortalSlug }) {
               <h2 className="text-2xl font-semibold text-[#0F1419]">{config.name} sign in</h2>
               <p className="mt-1 text-sm text-[#6B7280]">Sign in to the {config.name} portal.</p>
 
-              {deniedFor && (
+              {deniedMessage && (
                 <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                  Your account doesn't have access to the {PORTALS[deniedFor as PortalSlug]?.name ?? deniedFor} portal.
+                  {deniedMessage}
                 </div>
               )}
 
-              <form action={handleSubmit} className="mt-8 space-y-4">
-                <div>
-                  <Label htmlFor="email">Work email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <Input id="email" name="email" type="email" required placeholder="you@company.com" className="pl-9" />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <a href="/reset-password" className="text-xs font-medium text-primary hover:underline">
-                      Forgot password?
-                    </a>
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <Input id="password" name="password" type="password" required placeholder="••••••••" className="pl-9" />
-                  </div>
-                </div>
+              <div className="mt-8 space-y-2.5">
+                <GoogleSignInButton portal={portal} />
+                <PasskeySignInButton portal={portal} />
+              </div>
 
-                {error && (
-                  <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-                    {error}
-                  </div>
-                )}
+              <div className="my-5 flex items-center gap-3">
+                <div className="h-px flex-1 bg-slate-200" />
+                <span className="text-[11px] uppercase tracking-wide text-[#8B95A5]">or</span>
+                <div className="h-px flex-1 bg-slate-200" />
+              </div>
 
-                <Button type="submit" className="w-full" disabled={isPending}>
-                  {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Sign in
-                </Button>
-              </form>
+              {!showPassword ? (
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(true)}
+                  className="flex w-full items-center justify-center gap-1.5 text-xs font-medium text-[#6B7280] hover:text-[#0F1419]"
+                >
+                  Use password instead <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              ) : (
+                <form action={handleSubmit} className="space-y-4">
+                  <div>
+                    <Label htmlFor="email">Work email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <Input id="email" name="email" type="email" required placeholder="you@company.com" className="pl-9" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Password</Label>
+                      <a href="/reset-password" className="text-xs font-medium text-primary hover:underline">
+                        Forgot password?
+                      </a>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <Input id="password" name="password" type="password" required placeholder="••••••••" className="pl-9" />
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+                      {error}
+                    </div>
+                  )}
+
+                  <Button type="submit" className="w-full" variant="secondary" disabled={isPending}>
+                    {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Sign in with password
+                  </Button>
+                </form>
+              )}
 
               <p className="mt-6 text-center text-xs text-[#6B7280]">
                 This CRM is invite-only. Ask your admin for an invite link.
@@ -166,7 +198,7 @@ function PortalLoginForm({ portal }: { portal: PortalSlug }) {
 
       <div className="relative z-10 mt-12 flex items-center gap-2 text-xs text-white/60">
         <ShieldCheck className="h-4 w-4" />
-        Enterprise-grade RLS, role-based access, and mandatory 2FA.
+        Enterprise-grade RLS, role-based access, and passkey-secured sign-in.
       </div>
     </div>
   );
