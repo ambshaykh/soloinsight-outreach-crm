@@ -1,38 +1,23 @@
 import { preferenceAttrs } from "@/lib/utils";
-import Link from "next/link";
-import { ArrowLeftRight, LogOut } from "lucide-react";
 import { requirePortalAccess } from "@/lib/auth/session";
-import { Logo } from "@/components/shared/logo";
-import { signOut } from "@/app/actions/auth";
-import { portalsForRole } from "@/lib/auth/portals";
+import { ExecutiveSidebar } from "@/components/layout/executive-sidebar";
+import { PortalTopbar } from "@/components/layout/portal-topbar";
+import { PageTransition } from "@/components/shared/page-transition";
 import { listMyNotifications, countMyUnreadNotifications } from "@/lib/data/notifications";
-import { NotificationsBell } from "@/components/shared/notifications-bell";
 
 export default async function ExecutivePortalLayout({ children }: { children: React.ReactNode }) {
   const profile = await requirePortalAccess("executive");
-  const hasMultiplePortals = portalsForRole(profile.role).length > 1;
   const [notifications, unreadCount] = await Promise.all([listMyNotifications(10), countMyUnreadNotifications()]);
 
   return (
-    <div className="min-h-screen bg-[#FFF7ED]">
-      <header className="flex h-16 items-center justify-between border-b border-amber-100 bg-white/80 px-6 backdrop-blur">
-        <Logo className="text-[#0F1419]" />
-        <div className="flex items-center gap-4 text-xs font-medium text-[#6B7280]">
-          <NotificationsBell initialNotifications={notifications as any} initialUnreadCount={unreadCount} />
-          <Link href="/account" className="hover:text-[#0F1419]">Account</Link>
-          {hasMultiplePortals && (
-            <Link href="/" className="flex items-center gap-1.5 hover:text-[#0F1419]">
-              <ArrowLeftRight className="h-3.5 w-3.5" /> Switch portal
-            </Link>
-          )}
-          <form action={signOut}>
-            <button type="submit" className="flex items-center gap-1.5 text-rose-600 hover:text-rose-700">
-              <LogOut className="h-3.5 w-3.5" /> Sign out
-            </button>
-          </form>
-        </div>
-      </header>
-      <main className="p-6" {...preferenceAttrs(profile.preferences)}>{children}</main>
+    <div className="flex h-screen overflow-hidden bg-[#F5F3FF]">
+      <ExecutiveSidebar role={profile.role} />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <PortalTopbar title="Executive Dashboard" profile={profile} notifications={notifications as any} unreadCount={unreadCount} />
+        <main className="flex-1 overflow-y-auto p-6" {...preferenceAttrs(profile.preferences)}>
+          <PageTransition>{children}</PageTransition>
+        </main>
+      </div>
     </div>
   );
 }

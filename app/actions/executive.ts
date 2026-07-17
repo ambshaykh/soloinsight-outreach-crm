@@ -6,9 +6,9 @@ import { requireProfile } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/auth/permissions";
 import { getDashboardData } from "@/lib/data/dashboard";
 import { getAnalyticsData } from "@/lib/data/analytics";
-import { getTopPriorityItems } from "@/lib/data/executive";
+import { getTopPriorityItems, getTeamLeaderboard } from "@/lib/data/executive";
 import { listSalesforceCampaignStats } from "@/app/actions/salesforce";
-import { DEFAULT_LAYOUT, type LayoutItem } from "@/lib/executive/layout-config";
+import { DEFAULT_LAYOUT, type LayoutItem, type WidgetId } from "@/lib/executive/layout-config";
 
 export async function getExecutiveDashboardLayout(): Promise<LayoutItem[]> {
   const profile = await requireProfile();
@@ -26,7 +26,16 @@ export async function getExecutiveDashboardLayout(): Promise<LayoutItem[]> {
   if (!data || !Array.isArray(data.layout) || data.layout.length === 0) {
     return DEFAULT_LAYOUT;
   }
-  return data.layout as LayoutItem[];
+
+  // Phase 7 added a new widget (pipeline_forecast). Anyone with a
+  // previously-saved layout (from before this widget existed) wouldn't see
+  // it just because their saved layout array doesn't mention it — so append
+  // any DEFAULT_LAYOUT widgets missing from the saved layout, keeping the
+  // user's existing order/sizes for everything else untouched.
+  const saved = data.layout as LayoutItem[];
+  const savedIds = new Set(saved.map((w) => w.id));
+  const missing = DEFAULT_LAYOUT.filter((w) => !savedIds.has(w.id));
+  return missing.length > 0 ? [...saved, ...missing] : saved;
 }
 
 export async function saveExecutiveDashboardLayout(layout: LayoutItem[]) {
@@ -45,15 +54,16 @@ export async function saveExecutiveDashboardLayout(layout: LayoutItem[]) {
   return { error: null };
 }
 
-/** All four widgets' data, fetched together for a single page load. */
+/** All widgets' data, fetched together for a single page load. */
 export async function getExecutiveDashboardData() {
   const profile = await requireProfile();
 
-  const [dashboard, analytics, topPriority, salesforceStats] = await Promise.all([
+  const [dashboard, analytics, topPriority, salesforceStats, leaderboard] = await Promise.all([
     getDashboardData(profile),
     getAnalyticsData(),
     getTopPriorityItems(8),
     listSalesforceCampaignStats(),
+    getTeamLeaderboard(),
   ]);
 
   const salesforceSummary = {
@@ -88,7 +98,8 @@ export async function getExecutiveDashboardData() {
     activityTrend,
     topReps,
     pipeline: dashboard.charts.pipelineByStatus,
-    teamActivity: analytics.perUser,
+    pipelineByWeek: analytics.pipelineByWeek,
+    teamActivity: leaderboard,
     topPriority,
     salesforceSummary,
   };

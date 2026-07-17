@@ -26,8 +26,8 @@ export const PORTALS: Record<PortalSlug, PortalConfig> = {
     subhead: "Accounts, contacts, outreach queue, and analytics for SDRs and sales ops.",
     description: "Accounts, contacts, outreach queue & analytics.",
     home: "/dashboard",
-    gradient: "linear-gradient(135deg, #0b1d4a 0%, #13306f 18%, #1E3A8A 34%, #2450a8 50%, #3b5fd9 64%, #1E3A5F 80%, #0b1d4a 100%)",
-    accent: "from-cyan-400/40 via-blue-400/20 to-transparent",
+    gradient: "linear-gradient(135deg, #1a0b2e 0%, #2d1450 18%, #4c1d95 34%, #5b21b6 50%, #6d28d9 64%, #2d1450 80%, #1a0b2e 100%)",
+    accent: "from-indigo-400/40 via-violet-400/20 to-transparent",
   },
   admin: {
     slug: "admin",
@@ -48,8 +48,8 @@ export const PORTALS: Record<PortalSlug, PortalConfig> = {
     subhead: "Leads uploaded, emails sent, bounce rates, and unsubscribes across your Salesforce orgs.",
     description: "Synced Salesforce campaigns, leads & bounce/unsubscribe data.",
     home: "/salesforce",
-    gradient: "linear-gradient(135deg, #04231b 0%, #06392c 18%, #0b5c45 34%, #0f7a5c 50%, #17a877 64%, #06392c 80%, #04231b 100%)",
-    accent: "from-emerald-400/40 via-teal-400/20 to-transparent",
+    gradient: "linear-gradient(135deg, #1a0b2e 0%, #2d1450 18%, #4c1d95 34%, #5b21b6 50%, #6d28d9 64%, #2d1450 80%, #1a0b2e 100%)",
+    accent: "from-fuchsia-400/40 via-purple-400/20 to-transparent",
   },
   executive: {
     slug: "executive",
@@ -59,8 +59,8 @@ export const PORTALS: Record<PortalSlug, PortalConfig> = {
     subhead: "A cross-portal rollup built for leadership decisions.",
     description: "Cross-portal metrics for leadership, at a glance.",
     home: "/executive",
-    gradient: "linear-gradient(135deg, #241105 0%, #3d1d08 18%, #7c2d12 34%, #9a3412 50%, #c2410c 64%, #3d1d08 80%, #241105 100%)",
-    accent: "from-amber-400/40 via-orange-400/20 to-transparent",
+    gradient: "linear-gradient(135deg, #1a0b2e 0%, #2d1450 18%, #4c1d95 34%, #5b21b6 50%, #6d28d9 64%, #2d1450 80%, #1a0b2e 100%)",
+    accent: "from-purple-400/40 via-violet-400/20 to-transparent",
   },
 };
 

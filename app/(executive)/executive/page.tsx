@@ -3,6 +3,7 @@ import { getExecutiveDashboardLayout, getExecutiveDashboardData } from "@/app/ac
 import { DashboardGrid } from "@/components/executive/dashboard-grid";
 import { StatTile } from "@/components/shared/stat-tile";
 import { MiniBarTrend } from "@/components/shared/mini-bar-trend";
+import { ExportSummaryButton } from "@/components/executive/export-summary-button";
 import { Briefcase, Calendar, Flame, TrendingDown, MessageSquareReply } from "lucide-react";
 
 export default async function ExecutivePortalHome() {
@@ -21,18 +22,31 @@ export default async function ExecutivePortalHome() {
               : "A leadership rollup of pipeline, team activity, and Salesforce campaign data."}
           </p>
         </div>
-        <div className="hidden w-40 shrink-0 sm:block">
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#8B95A5]">Outreach · 14 days</p>
-          <MiniBarTrend data={activityTrend} height={36} />
+        <div className="flex shrink-0 items-start gap-4">
+          <div className="hidden w-40 shrink-0 sm:block">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#8B95A5]">Outreach · 14 days</p>
+            <MiniBarTrend data={activityTrend} height={36} />
+          </div>
+          <ExportSummaryButton kpis={kpis} leaderboard={data.teamActivity} />
         </div>
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <StatTile icon={Briefcase} label="In progress" value={kpis.accountsInProgress} tone="primary" />
+        <StatTile
+          icon={Briefcase} label="In progress" value={kpis.accountsInProgress} tone="primary"
+          href="/executive/records?filter=in_progress"
+        />
         <StatTile icon={Calendar} label="Meetings booked" value={kpis.meetingsBooked} tone="success" />
-        <StatTile icon={Flame} label="Hot prospects" value={kpis.hotProspects} tone="warning" />
+        <StatTile
+          icon={Flame} label="Hot prospects" value={kpis.hotProspects} tone="warning"
+          href="/executive/records?filter=hot"
+        />
         <StatTile icon={MessageSquareReply} label="Reply rate" value={`${kpis.replyRate}%`} tone="primary" />
-        <StatTile icon={TrendingDown} label="Stale (14d+)" value={kpis.staleProspects} tone={kpis.staleProspects > 0 ? "danger" : "neutral"} />
+        <StatTile
+          icon={TrendingDown} label="Stale (14d+)" value={kpis.staleProspects}
+          tone={kpis.staleProspects > 0 ? "danger" : "neutral"}
+          href="/executive/records?filter=stale"
+        />
         <StatTile
           label="Outreach · 7d"
           value={kpis.last7DayActivity}

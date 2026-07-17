@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import Link from "next/link";
+import { ArrowDown, ArrowUp, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -8,6 +9,11 @@ import { cn } from "@/lib/utils";
  * (kpi-tile), redone in our own brand colors. Used across the Executive
  * Dashboard, Reports catalog, and Admin Users pages for consistent "at a
  * glance" numbers.
+ *
+ * Phase 7: optional `href` turns the tile into a drill-down link into the
+ * underlying records behind the number (e.g. "Hot prospects" -> the filtered
+ * list of those contacts) — hover reveals an arrow affordance so it's clear
+ * the tile is clickable.
  */
 export function StatTile({
   icon: Icon,
@@ -17,6 +23,7 @@ export function StatTile({
   delta,
   deltaLabel,
   tone = "primary",
+  href,
   className,
 }: {
   icon?: LucideIcon;
@@ -27,10 +34,12 @@ export function StatTile({
   delta?: number;
   deltaLabel?: string;
   tone?: "primary" | "success" | "warning" | "danger" | "neutral";
+  /** When set, the whole tile becomes a drill-down link. */
+  href?: string;
   className?: string;
 }) {
   const toneClasses: Record<string, string> = {
-    primary: "bg-blue-50 text-primary",
+    primary: "bg-gradient-to-br from-violet-50 to-violet-100 text-violet-700",
     success: "bg-emerald-50 text-emerald-600",
     warning: "bg-amber-50 text-amber-600",
     danger: "bg-rose-50 text-rose-600",
@@ -41,8 +50,14 @@ export function StatTile({
   const deltaUp = hasDelta && (delta as number) > 0;
   const deltaFlat = hasDelta && delta === 0;
 
-  return (
-    <div className={cn("rounded-xl border border-slate-200 bg-white p-4", className)}>
+  const body = (
+    <div
+      className={cn(
+        "group relative rounded-xl border border-slate-200 bg-white p-4 transition-all duration-200",
+        href && "cursor-pointer hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md",
+        className
+      )}
+    >
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-[#8B95A5]">{label}</p>
         {Icon && (
@@ -66,6 +81,11 @@ export function StatTile({
         )}
       </div>
       {sublabel && <p className="mt-0.5 text-[11px] text-[#8B95A5]">{sublabel}</p>}
+      {href && (
+        <ArrowUpRight className="absolute right-3 top-3 h-3.5 w-3.5 text-violet-300 opacity-0 transition-opacity group-hover:opacity-100" />
+      )}
     </div>
   );
+
+  return href ? <Link href={href}>{body}</Link> : body;
 }

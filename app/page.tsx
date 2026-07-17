@@ -21,8 +21,8 @@ export default async function PortalSelectorPage({
   const deniedPortal = searchParams.denied ? PORTALS[searchParams.denied as keyof typeof PORTALS] : null;
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center overflow-hidden bg-[#0a0e1a] px-6 py-14 text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(37,99,235,0.18),transparent_40%),radial-gradient(circle_at_85%_85%,rgba(109,40,217,0.18),transparent_40%)]" />
+    <div className="relative flex min-h-screen flex-col items-center overflow-hidden bg-[#120a1f] px-6 py-14 text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(139,92,246,0.18),transparent_40%),radial-gradient(circle_at_85%_85%,rgba(192,38,211,0.16),transparent_40%)]" />
 
       <div className="relative z-10 w-full max-w-5xl">
         <Logo className="text-white" />

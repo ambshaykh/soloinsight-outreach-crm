@@ -35,7 +35,7 @@ html, body {
 }
 
 .app-shell-gradient {
-  background: linear-gradient(135deg, #EFF6FF 0%, #F5F3FF 45%, #ECFEFF 100%);
+  background: linear-gradient(135deg, #F5F3FF 0%, #EDE4FF 45%, #FBF7FF 100%);
   background-size: 200% 200%;
   animation: gradientPan 22s ease infinite;
 }
@@ -70,3 +70,16 @@ html, body {
 [data-density="compact"] .p-5 { padding: 0.875rem !important; }
 [data-density="compact"] .gap-6 { gap: 1rem !important; }
 [data-density="compact"] .space-y-6 > * + * { margin-top: 1rem !important; }
+
+/* Phase 7 — print-friendly executive summary export (window.print()).
+   Sidebar/topbar/export button are hidden via Tailwind's print:hidden
+   utility on the components themselves; this just makes the printed page
+   itself clean (white background, no clipped overflow). */
+@media print {
+  html, body {
+    background: #FFFFFF !important;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+}
