@@ -8,15 +8,16 @@ import { ContactFormDialog } from "@/components/contacts/contact-form-dialog";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 export default async function AccountDetailPage({ params }: { params: { id: string } }) {
-  let account;
+  // These two queries are independent of each other, so fetch them in
+  // parallel instead of one after the other (matches the pattern already
+  // used on the contact detail page).
+  let account, activity;
   try {
-    account = await getAccountById(params.id);
+    [account, activity] = await Promise.all([getAccountById(params.id), getAccountActivity(params.id)]);
   } catch {
     return notFound();
   }
   if (!account) return notFound();
-
-  const activity = await getAccountActivity(params.id);
 
   return (
     <PageTransition>

@@ -24,7 +24,12 @@ export function DataImportExport() {
 
   function withBusy(key: string, fn: () => Promise<void>) {
     setBusy(key);
-    fn().finally(() => setBusy(null));
+    fn()
+      .catch((e: unknown) => {
+        const message = e instanceof Error ? e.message : "Something went wrong.";
+        toast.error(`That didn't finish: ${message}. Check the list before re-uploading — some rows may have already saved.`);
+      })
+      .finally(() => setBusy(null));
   }
 
   function handleAccountsImport(file: File) {

@@ -1,8 +1,40 @@
 "use server";
 
+// Bulk CSV imports can involve hundreds of rows and several batched network
+// round trips to Supabase — give this route real headroom instead of
+// whatever short default the hosting platform would otherwise apply.
+export const maxDuration = 300;
+
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth/session";
 import type { AccountStatus, ContactStatus, PriorityLevel } from "@/lib/types/database";
+
+/** Runs `worker` over `items` with at most `concurrency` requests in flight
+ *  at once — batches DB round trips without opening hundreds of connections
+ *  at the same time. */
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  async function run() {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await worker(items[i], i);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, run));
+  return results;
+}
+
+/** Splits an array into fixed-size chunks. */
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
 
 /* ---------------------------------------------------------------------- */
 /* CSV helpers — hand-rolled, RFC4180-compliant (quoted fields, embedded  */
@@ -121,39 +153,57 @@ export async function contactCsvTemplate() {
 /* Import                                                                  */
 /* ---------------------------------------------------------------------- */
 
-/** Finds an existing account by domain or company name (case-insensitive), or creates one. */
-async function resolveAccountId(
+/**
+ * Bulk-resolves account IDs for a whole CSV in a small, fixed number of
+ * round trips instead of one (or three) round trips per row:
+ *   1. fetch every existing account's id/company_name/domain once
+ *   2. insert every not-yet-seen company in a single bulk insert
+ * Returns a lowercased-company-name -> account id map.
+ */
+async function resolveAccountIdsInBulk(
   supabase: ReturnType<typeof createClient>,
   profileId: string,
-  companyName: string,
-  domain?: string,
-): Promise<string | null> {
-  if (!companyName && !domain) return null;
+  companyNames: string[],
+): Promise<Map<string, string>> {
+  const byName = new Map<string, string>();
+  const wanted = Array.from(new Set(companyNames.map((c) => c.trim().toLowerCase()).filter(Boolean)));
+  if (wanted.length === 0) return byName;
 
-  if (domain) {
-    const { data } = await supabase.from("accounts").select("id").ilike("domain", domain).maybeSingle();
-    if (data) return data.id;
+  const { data: existing } = await supabase.from("accounts").select("id, company_name, domain");
+  for (const acc of existing ?? []) {
+    if (acc.company_name) byName.set(String(acc.company_name).trim().toLowerCase(), acc.id);
   }
-  if (companyName) {
-    const { data } = await supabase.from("accounts").select("id").ilike("company_name", companyName).maybeSingle();
-    if (data) return data.id;
-  }
-  if (!companyName) return null;
 
-  const { data: created, error } = await supabase
-    .from("accounts")
-    .insert({
-      company_name: companyName,
-      domain: domain || null,
-      status: "new",
-      priority: "medium",
-      icp_score: 50,
-      owner_id: profileId,
-      created_by: profileId,
-    })
-    .select("id")
-    .single();
-  return error ? null : created.id;
+  const toCreate = wanted.filter((name) => !byName.has(name));
+  if (toCreate.length === 0) return byName;
+
+  // Preserve original casing for the new rows (grab the first raw value seen per lowercased key).
+  const rawByLower = new Map<string, string>();
+  for (const c of companyNames) {
+    const key = c.trim().toLowerCase();
+    if (key && !rawByLower.has(key)) rawByLower.set(key, c.trim());
+  }
+
+  for (const batch of chunk(toCreate, 500)) {
+    const { data: created, error } = await supabase
+      .from("accounts")
+      .insert(
+        batch.map((key) => ({
+          company_name: rawByLower.get(key) ?? key,
+          status: "new" as const,
+          priority: "medium" as const,
+          icp_score: 50,
+          owner_id: profileId,
+          created_by: profileId,
+        })),
+      )
+      .select("id, company_name");
+    if (!error) {
+      for (const acc of created ?? []) byName.set(String(acc.company_name).trim().toLowerCase(), acc.id);
+    }
+  }
+
+  return byName;
 }
 
 export async function importAccountsCsv(csvText: string) {
@@ -162,14 +212,28 @@ export async function importAccountsCsv(csvText: string) {
   const { rows, error: parseError } = csvToObjects(csvText);
   if (parseError) return { error: parseError, imported: 0, updated: 0 };
 
-  let imported = 0;
-  let updated = 0;
   const errors: string[] = [];
+  const validRows = rows
+    .map((row, i) => ({ row, i, companyName: row.company_name || row.company || "" }))
+    .filter(({ companyName, i }) => {
+      if (!companyName) errors.push(`Row ${i + 2}: missing company_name, skipped.`);
+      return !!companyName;
+    });
 
-  for (const [i, row] of rows.entries()) {
-    const companyName = row.company_name || row.company || "";
-    if (!companyName) { errors.push(`Row ${i + 2}: missing company_name, skipped.`); continue; }
+  // One bulk fetch covers domain- and name-matching for every row up front,
+  // instead of up to two `ilike` round trips per row.
+  const { data: existing } = await supabase.from("accounts").select("id, company_name, domain");
+  const byDomain = new Map<string, string>();
+  const byName = new Map<string, string>();
+  for (const acc of existing ?? []) {
+    if (acc.domain) byDomain.set(String(acc.domain).trim().toLowerCase(), acc.id);
+    if (acc.company_name) byName.set(String(acc.company_name).trim().toLowerCase(), acc.id);
+  }
 
+  const toInsert: Record<string, unknown>[] = [];
+  const toUpdate: { id: string; payload: Record<string, unknown>; rowNum: number }[] = [];
+
+  for (const { row, i, companyName } of validRows) {
     const payload = {
       company_name: companyName,
       domain: row.domain || null,
@@ -183,26 +247,33 @@ export async function importAccountsCsv(csvText: string) {
       notes: row.notes || null,
     };
 
-    let existingId: string | null = row.id || null;
-    if (!existingId && row.domain) {
-      const { data } = await supabase.from("accounts").select("id").ilike("domain", row.domain).maybeSingle();
-      existingId = data?.id ?? null;
-    }
-    if (!existingId) {
-      const { data } = await supabase.from("accounts").select("id").ilike("company_name", companyName).maybeSingle();
-      existingId = data?.id ?? null;
-    }
+    const existingId =
+      row.id ||
+      (row.domain && byDomain.get(row.domain.trim().toLowerCase())) ||
+      byName.get(companyName.trim().toLowerCase()) ||
+      null;
 
-    if (existingId) {
-      const { error } = await supabase.from("accounts").update(payload).eq("id", existingId);
-      if (error) errors.push(`Row ${i + 2}: ${error.message}`);
-      else updated += 1;
-    } else {
-      const { error } = await supabase.from("accounts").insert({ ...payload, owner_id: profile.id, created_by: profile.id });
-      if (error) errors.push(`Row ${i + 2}: ${error.message}`);
-      else imported += 1;
-    }
+    if (existingId) toUpdate.push({ id: existingId, payload, rowNum: i + 2 });
+    else toInsert.push({ ...payload, owner_id: profile.id, created_by: profile.id });
   }
+
+  let imported = 0;
+  let updated = 0;
+
+  for (const batch of chunk(toInsert, 500)) {
+    const { error } = await supabase.from("accounts").insert(batch);
+    if (error) errors.push(`Insert batch: ${error.message}`);
+    else imported += batch.length;
+  }
+
+  // Updates still need one request per row (Postgrest has no per-row-varying
+  // bulk update), but run them with limited concurrency instead of one at a
+  // time so a re-import of an already-loaded file doesn't multiply latency.
+  await mapWithConcurrency(toUpdate, 20, async ({ id, payload, rowNum }) => {
+    const { error } = await supabase.from("accounts").update(payload).eq("id", id);
+    if (error) errors.push(`Row ${rowNum}: ${error.message}`);
+    else updated += 1;
+  });
 
   await supabase.rpc("log_audit_event", {
     p_action: "accounts.imported", p_entity_type: "account", p_entity_id: null, p_metadata: { imported, updated },
@@ -217,24 +288,48 @@ export async function importContactsCsv(csvText: string) {
   const { rows, error: parseError } = csvToObjects(csvText);
   if (parseError) return { error: parseError, imported: 0, updated: 0 };
 
-  let imported = 0;
-  let updated = 0;
   const errors: string[] = [];
+  const validRows = rows
+    .map((row, i) => {
+      // Accept common export aliases (e.g. ZoomInfo/Apollo-style exports use "Full Name",
+      // "Job Title", "Phone Number" instead of our column names).
+      let firstName = row.first_name || "";
+      let lastName = row.last_name || "";
+      if ((!firstName || !lastName) && (row.full_name || row.name)) {
+        const parts = (row.full_name || row.name).trim().split(/\s+/);
+        firstName = firstName || parts[0] || "";
+        lastName = lastName || parts.slice(1).join(" ") || "";
+      }
+      return { row, i, firstName, lastName };
+    })
+    .filter(({ firstName, lastName, i }) => {
+      if (!firstName || !lastName) errors.push(`Row ${i + 2}: missing first_name/last_name, skipped.`);
+      return !!firstName && !!lastName;
+    });
 
-  for (const [i, row] of rows.entries()) {
-    // Accept common export aliases (e.g. ZoomInfo/Apollo-style exports use "Full Name",
-    // "Job Title", "Phone Number" instead of our column names).
-    let firstName = row.first_name || "";
-    let lastName = row.last_name || "";
-    if ((!firstName || !lastName) && (row.full_name || row.name)) {
-      const parts = (row.full_name || row.name).trim().split(/\s+/);
-      firstName = firstName || parts[0] || "";
-      lastName = lastName || parts.slice(1).join(" ") || "";
+  // Resolve every distinct company name to an account id in one pass
+  // (fetch-all + single bulk insert of the missing ones), instead of a
+  // domain lookup + name lookup + possible insert per row.
+  const companyNames = validRows.map(({ row }) => row.company_name || row.company || "").filter(Boolean);
+  const accountIdByName = await resolveAccountIdsInBulk(supabase, profile.id, companyNames);
+
+  // One bulk fetch of existing contacts' emails covers dedup for every row,
+  // instead of an `ilike` round trip per row.
+  const emails = validRows.map(({ row }) => row.email).filter(Boolean) as string[];
+  const byEmail = new Map<string, string>();
+  if (emails.length) {
+    const { data: existing } = await supabase.from("contacts").select("id, email");
+    for (const c of existing ?? []) {
+      if (c.email) byEmail.set(String(c.email).trim().toLowerCase(), c.id);
     }
-    if (!firstName || !lastName) { errors.push(`Row ${i + 2}: missing first_name/last_name, skipped.`); continue; }
+  }
 
+  const toInsert: Record<string, unknown>[] = [];
+  const toUpdate: { id: string; payload: Record<string, unknown>; rowNum: number }[] = [];
+
+  for (const { row, i, firstName, lastName } of validRows) {
     const companyName = row.company_name || row.company || "";
-    const accountId = row.account_id || (companyName ? await resolveAccountId(supabase, profile.id, companyName) : null);
+    const accountId = row.account_id || (companyName ? accountIdByName.get(companyName.trim().toLowerCase()) ?? null : null);
 
     const payload = {
       first_name: firstName,
@@ -249,22 +344,26 @@ export async function importContactsCsv(csvText: string) {
       account_id: accountId,
     };
 
-    let existingId: string | null = row.id || null;
-    if (!existingId && row.email) {
-      const { data } = await supabase.from("contacts").select("id").ilike("email", row.email).maybeSingle();
-      existingId = data?.id ?? null;
-    }
+    const existingId = row.id || (row.email && byEmail.get(row.email.trim().toLowerCase())) || null;
 
-    if (existingId) {
-      const { error } = await supabase.from("contacts").update(payload).eq("id", existingId);
-      if (error) errors.push(`Row ${i + 2}: ${error.message}`);
-      else updated += 1;
-    } else {
-      const { error } = await supabase.from("contacts").insert({ ...payload, owner_id: profile.id, created_by: profile.id });
-      if (error) errors.push(`Row ${i + 2}: ${error.message}`);
-      else imported += 1;
-    }
+    if (existingId) toUpdate.push({ id: existingId, payload, rowNum: i + 2 });
+    else toInsert.push({ ...payload, owner_id: profile.id, created_by: profile.id });
   }
+
+  let imported = 0;
+  let updated = 0;
+
+  for (const batch of chunk(toInsert, 500)) {
+    const { error } = await supabase.from("contacts").insert(batch);
+    if (error) errors.push(`Insert batch: ${error.message}`);
+    else imported += batch.length;
+  }
+
+  await mapWithConcurrency(toUpdate, 20, async ({ id, payload, rowNum }) => {
+    const { error } = await supabase.from("contacts").update(payload).eq("id", id);
+    if (error) errors.push(`Row ${rowNum}: ${error.message}`);
+    else updated += 1;
+  });
 
   await supabase.rpc("log_audit_event", {
     p_action: "contacts.imported", p_entity_type: "contact", p_entity_id: null, p_metadata: { imported, updated },

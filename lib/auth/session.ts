@@ -1,19 +1,28 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile, UserRole } from "@/lib/types/database";
 import { canAccessPortal, PORTALS, type PortalSlug } from "@/lib/auth/portals";
 
-export async function getCurrentUser() {
+/**
+ * `cache()` deduplicates calls made during the same server render pass —
+ * middleware, the portal layout, and every page/component underneath it
+ * were each calling this independently (2 Supabase round trips apiece),
+ * which stacked into 10+ redundant network calls per navigation. Wrapping
+ * it here means the first call still hits Supabase, and every other call
+ * for the same request reuses that in-flight/resolved result for free.
+ */
+export const getCurrentUser = cache(async () => {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   return user;
-}
+});
 
-export async function getCurrentProfile(): Promise<Profile | null> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
+  const user = await getCurrentUser();
   if (!user) return null;
 
+  const supabase = createClient();
   const { data } = await supabase
     .from("profiles")
     .select("*")
@@ -21,7 +30,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     .single();
 
   return (data as Profile) ?? null;
-}
+});
 
 /** Use in a Server Component / layout to hard-require a signed-in profile. */
 export async function requireProfile(): Promise<Profile> {
