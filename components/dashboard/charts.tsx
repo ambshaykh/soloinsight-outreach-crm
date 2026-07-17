@@ -5,8 +5,8 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, Legend,
 } from "recharts";
 
-const COLORS = { email: "#2563EB", call: "#5B9CFF", linkedin: "#8B7BFF", other: "#93C5FD" };
-const PIE_COLORS = ["#2563EB", "#5B9CFF", "#8B7BFF", "#93C5FD"];
+const COLORS = { email: "#7C3AED", call: "#C026D3", linkedin: "#A78BFA", other: "#DDD6FE" };
+const PIE_COLORS = ["#7C3AED", "#C026D3", "#A78BFA", "#DDD6FE"];
 
 export function DailyActivityChart({ data }: { data: { date: string; email: number; call: number; linkedin: number; other: number }[] }) {
   return (
@@ -55,7 +55,7 @@ export function PipelineByStatusChart({ data }: { data: { status: string; count:
         <XAxis dataKey="status" tick={{ fontSize: 10, fill: "#8B95A5" }} axisLine={false} tickLine={false} interval={0} angle={-20} textAnchor="end" height={50} />
         <YAxis tick={{ fontSize: 11, fill: "#8B95A5" }} axisLine={false} tickLine={false} allowDecimals={false} />
         <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E2E8F0" }} />
-        <Bar dataKey="count" fill="#2563EB" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="count" fill="#7C3AED" radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -70,8 +70,8 @@ export function OwnerPerformanceChart({ data }: { data: { name: string; emails: 
         <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#0F1419" }} axisLine={false} tickLine={false} width={110} />
         <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E2E8F0" }} />
         <Legend wrapperStyle={{ fontSize: 11 }} />
-        <Bar dataKey="emails" name="Emails" fill="#2563EB" radius={[0, 4, 4, 0]} />
-        <Bar dataKey="calls" name="Calls" fill="#5B9CFF" radius={[0, 4, 4, 0]} />
+        <Bar dataKey="emails" name="Emails" fill="#7C3AED" radius={[0, 4, 4, 0]} />
+        <Bar dataKey="calls" name="Calls" fill="#C026D3" radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

@@ -103,7 +103,7 @@ function TwoFactorSetupInner() {
         </div>
 
         <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-violet-50">
             <ShieldCheck className="h-5 w-5 text-primary" />
           </div>
           <div>
@@ -111,7 +111,7 @@ function TwoFactorSetupInner() {
               {step === "verify-existing" ? "Verify your identity" : "Set up two-factor authentication"}
             </h1>
             <p className="text-xs text-[#6B7280]">
-              Optional now — adds an extra step on top of your passkey or Google Sign-In.
+              Optional now — adds an extra step on top of your Google Sign-In.
             </p>
           </div>
         </div>

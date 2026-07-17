@@ -6,8 +6,7 @@ import { SecurityStatusBadge } from "@/components/shared/security-status-badge";
 import { Button } from "@/components/ui/button";
 import { ChangePasswordForm } from "@/components/settings/change-password-form";
 import { SignOutOthersButton } from "@/components/settings/sign-out-others-button";
-import { PasskeyManager } from "@/components/settings/passkey-manager";
-import { ShieldCheck, KeyRound, Monitor, Fingerprint } from "lucide-react";
+import { ShieldCheck, KeyRound, Monitor } from "lucide-react";
 
 export default async function AccountSecurityPage() {
   const profile = await requireProfile();
@@ -22,16 +21,6 @@ export default async function AccountSecurityPage() {
       <div className="grid grid-cols-1 gap-6 lg:max-w-lg">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Fingerprint className="h-4 w-4 text-primary" /> Passkeys</CardTitle>
-            <CardDescription>Sign in with your fingerprint, face, screen lock, or a hardware key instead of a password.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PasskeyManager />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
             <CardTitle className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> Two-factor authentication</CardTitle>
             <CardDescription>Optional now — no longer required to sign in.</CardDescription>
           </CardHeader>
@@ -41,7 +30,7 @@ export default async function AccountSecurityPage() {
               <SecurityStatusBadge enabled={profile.two_factor_enabled} />
             </div>
             <p className="text-xs text-[#6B7280]">
-              No longer required — passkeys and Google Sign-In are the primary way in now. You can still turn TOTP on
+              No longer required — Google Sign-In is the primary way in now. You can still turn TOTP on
               as an extra layer if you want it.
             </p>
             <Link href="/2fa/setup"><Button variant="secondary">{profile.two_factor_enabled ? 'Manage 2FA' : 'Set up 2FA'}</Button></Link>

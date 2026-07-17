@@ -51,7 +51,7 @@ export default async function AccountPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> Security</CardTitle>
-            <CardDescription>Optional extra layer on top of your passkey or Google Sign-In.</CardDescription>
+            <CardDescription>Optional extra layer on top of your Google Sign-In.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5">
@@ -83,7 +83,7 @@ export default async function AccountPage() {
                 <Link
                   key={slug}
                   href={PORTALS[slug].home}
-                  className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-medium text-[#0F1419] hover:border-primary hover:bg-blue-50/50"
+                  className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-medium text-[#0F1419] hover:border-primary hover:bg-violet-50/50"
                 >
                   {PORTALS[slug].name}
                 </Link>

@@ -40,7 +40,7 @@ export function RolePermissionsMatrix({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+      <div className="flex items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 text-xs text-indigo-800">
         <ShieldCheck className="h-4 w-4 shrink-0" />
         Admin always has every permission, regardless of what's checked here — that can't be turned off, so the matrix can never lock every admin out.
       </div>

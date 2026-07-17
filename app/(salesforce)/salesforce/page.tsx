@@ -1,10 +1,17 @@
-import { CheckCircle2, AlertTriangle, Users, Megaphone, MessageSquareReply, Info } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Users, Megaphone, MessageSquareReply, Info, Trophy } from "lucide-react";
 import { hasPermission } from "@/lib/auth/permissions";
 import { listSalesforceOrgStatuses, listSalesforceCampaignStats } from "@/app/actions/salesforce";
 import { OrgConnections } from "@/components/salesforce/org-connections";
 import { SchemaDiscoveryPanel } from "@/components/salesforce/schema-discovery-panel";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+
+const MEDAL_STYLES = [
+  "bg-gradient-to-br from-amber-300 to-amber-500 text-white",
+  "bg-gradient-to-br from-slate-300 to-slate-400 text-white",
+  "bg-gradient-to-br from-orange-300 to-orange-500 text-white",
+];
 
 export default async function SalesforcePortalHome({
   searchParams,
@@ -17,6 +24,16 @@ export default async function SalesforcePortalHome({
   const totalLeads = stats.reduce((sum: number, s: any) => sum + (s.leads_uploaded ?? 0), 0);
   const totalResponses = stats.reduce((sum: number, s: any) => sum + (s.responded_count ?? 0), 0);
   const campaignsSynced = stats.length;
+
+  // "Response rate" only means anything for campaigns that actually have
+  // synced email-send counts (see the schema-discovery note below — most
+  // orgs won't, out of the box). Ranking is real, not estimated, and only
+  // considers campaigns where we genuinely have a denominator.
+  const topCampaigns = [...stats]
+    .filter((s: any) => (s.emails_sent ?? 0) > 0)
+    .map((s: any) => ({ ...s, responseRate: Math.round((s.responded_count / s.emails_sent) * 1000) / 10 }))
+    .sort((a: any, b: any) => b.responseRate - a.responseRate)
+    .slice(0, 5);
 
   return (
     <div className="p-6 text-[#0F1419]">
@@ -41,7 +58,7 @@ export default async function SalesforcePortalHome({
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50"><Users className="h-5 w-5 text-emerald-600" /></div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-violet-50 to-violet-100"><Users className="h-5 w-5 text-violet-700" /></div>
             <div>
               <p className="text-2xl font-semibold">{totalLeads.toLocaleString()}</p>
               <p className="text-xs text-[#6B7280]">Total leads uploaded</p>
@@ -50,7 +67,7 @@ export default async function SalesforcePortalHome({
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50"><Megaphone className="h-5 w-5 text-emerald-600" /></div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-fuchsia-50 to-fuchsia-100"><Megaphone className="h-5 w-5 text-fuchsia-700" /></div>
             <div>
               <p className="text-2xl font-semibold">{campaignsSynced.toLocaleString()}</p>
               <p className="text-xs text-[#6B7280]">Campaigns synced</p>
@@ -59,7 +76,7 @@ export default async function SalesforcePortalHome({
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50"><MessageSquareReply className="h-5 w-5 text-emerald-600" /></div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-50 to-indigo-100"><MessageSquareReply className="h-5 w-5 text-indigo-700" /></div>
             <div>
               <p className="text-2xl font-semibold">{totalResponses.toLocaleString()}</p>
               <p className="text-xs text-[#6B7280]">Total responses</p>
@@ -82,11 +99,34 @@ export default async function SalesforcePortalHome({
         </CardContent>
       </Card>
 
-      <Card className="mb-6 border-amber-200 bg-amber-50/50">
+      {topCampaigns.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Trophy className="h-4 w-4 text-violet-600" /> Top performing campaigns</CardTitle>
+            <CardDescription>Ranked by response rate — only counts campaigns with synced email-send data.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {topCampaigns.map((c: any, i: number) => (
+              <div key={c.id} className="flex items-center gap-3 rounded-lg border border-violet-100 px-3 py-2">
+                {i < 3 ? (
+                  <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold", MEDAL_STYLES[i])}>{i + 1}</span>
+                ) : (
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-500">{i + 1}</span>
+                )}
+                <span className="flex-1 truncate text-sm font-medium">{c.campaign_name}</span>
+                <span className="text-xs text-[#6B7280]">{c.responded_count} / {c.emails_sent} sent</span>
+                <span className="text-sm font-semibold text-violet-700">{c.responseRate}%</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="mb-6 border-indigo-200 bg-indigo-50/50">
         <CardContent className="p-5">
           <div className="flex items-start gap-3">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-            <p className="text-xs text-amber-800">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
+            <p className="text-xs text-indigo-800">
               <strong>Emails sent, bounce rate, and unsubscribes aren't synced yet.</strong> Vanilla Salesforce
               Campaigns don't track those out of the box — it depends on whether your orgs send campaign email via
               classic Mass Email, Lightning "List Email," or something custom. Run the scan below against a
@@ -111,23 +151,32 @@ export default async function SalesforcePortalHome({
                 <TableRow>
                   <TableHead>Campaign</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Start date</TableHead>
                   <TableHead>Leads uploaded</TableHead>
+                  <TableHead>Emails sent</TableHead>
+                  <TableHead>Bounce rate</TableHead>
+                  <TableHead>Unsub rate</TableHead>
                   <TableHead>Responses</TableHead>
                   <TableHead>Synced</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {stats.map((s: any) => (
-                  <TableRow key={s.id}>
-                    <TableCell className="text-sm font-medium">{s.campaign_name}</TableCell>
-                    <TableCell className="text-sm text-[#6B7280]">{s.campaign_status ?? "—"}</TableCell>
-                    <TableCell className="text-sm text-[#6B7280]">{s.start_date ?? "—"}</TableCell>
-                    <TableCell className="text-sm">{s.leads_uploaded}</TableCell>
-                    <TableCell className="text-sm">{s.responded_count}</TableCell>
-                    <TableCell className="text-xs text-[#6B7280]">{new Date(s.synced_at).toLocaleString()}</TableCell>
-                  </TableRow>
-                ))}
+                {stats.map((s: any) => {
+                  const hasEmailData = (s.emails_sent ?? 0) > 0;
+                  const bounceRate = hasEmailData ? Math.round((s.bounced_count / s.emails_sent) * 1000) / 10 : null;
+                  const unsubRate = hasEmailData ? Math.round((s.unsubscribed_count / s.emails_sent) * 1000) / 10 : null;
+                  return (
+                    <TableRow key={s.id}>
+                      <TableCell className="text-sm font-medium">{s.campaign_name}</TableCell>
+                      <TableCell className="text-sm text-[#6B7280]">{s.campaign_status ?? "—"}</TableCell>
+                      <TableCell className="text-sm">{s.leads_uploaded}</TableCell>
+                      <TableCell className="text-sm text-[#6B7280]">{hasEmailData ? s.emails_sent : "Not synced"}</TableCell>
+                      <TableCell className="text-sm text-[#6B7280]">{bounceRate !== null ? `${bounceRate}%` : "—"}</TableCell>
+                      <TableCell className="text-sm text-[#6B7280]">{unsubRate !== null ? `${unsubRate}%` : "—"}</TableCell>
+                      <TableCell className="text-sm">{s.responded_count}</TableCell>
+                      <TableCell className="text-xs text-[#6B7280]">{new Date(s.synced_at).toLocaleString()}</TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}

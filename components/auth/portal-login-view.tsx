@@ -12,7 +12,6 @@ import { Logo } from "@/components/shared/logo";
 import { signInToPortal } from "@/app/actions/auth";
 import { PORTALS, type PortalSlug } from "@/lib/auth/portals";
 import { GoogleSignInButton } from "@/components/auth/google-signin-button";
-import { PasskeySignInButton } from "@/components/auth/passkey-signin-button";
 
 function PortalLoginForm({ portal }: { portal: PortalSlug }) {
   const router = useRouter();
@@ -136,7 +135,6 @@ function PortalLoginForm({ portal }: { portal: PortalSlug }) {
 
               <div className="mt-8 space-y-2.5">
                 <GoogleSignInButton portal={portal} />
-                <PasskeySignInButton portal={portal} />
               </div>
 
               <div className="my-5 flex items-center gap-3">
@@ -198,7 +196,7 @@ function PortalLoginForm({ portal }: { portal: PortalSlug }) {
 
       <div className="relative z-10 mt-12 flex items-center gap-2 text-xs text-white/60">
         <ShieldCheck className="h-4 w-4" />
-        Enterprise-grade RLS, role-based access, and passkey-secured sign-in.
+        Enterprise-grade RLS, role-based access, and Google-secured sign-in.
       </div>
     </div>
   );

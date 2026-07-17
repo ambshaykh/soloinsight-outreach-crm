@@ -7,7 +7,7 @@
 export function MiniBarTrend({
   data,
   className,
-  color = "#2563EB",
+  color = "#7C3AED",
   height = 32,
 }: {
   data: { value: number }[];

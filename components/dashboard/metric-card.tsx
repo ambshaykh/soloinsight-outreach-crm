@@ -33,7 +33,7 @@ interface MetricCardProps {
 }
 
 const ACCENTS: Record<string, string> = {
-  blue: "from-blue-500/15 to-blue-500/5 text-blue-600",
+  blue: "from-indigo-500/15 to-indigo-500/5 text-indigo-600",
   emerald: "from-emerald-500/15 to-emerald-500/5 text-emerald-600",
   amber: "from-amber-500/15 to-amber-500/5 text-amber-600",
   rose: "from-rose-500/15 to-rose-500/5 text-rose-600",

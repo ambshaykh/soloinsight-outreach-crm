@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, passkey_enrolled")
+    .select("role")
     .eq("user_id", user.id)
     .single();
 
@@ -66,13 +66,6 @@ export async function GET(request: NextRequest) {
   await supabase.rpc("log_audit_event", {
     p_action: "user.login", p_entity_type: "auth", p_entity_id: null, p_metadata: { method: "google", portal },
   });
-
-  if (!profile.passkey_enrolled) {
-    const setupUrl = new URL("/passkey/setup", request.url);
-    if (portal) setupUrl.searchParams.set("portal", portal);
-    if (redirectTarget) setupUrl.searchParams.set("redirect", redirectTarget);
-    return NextResponse.redirect(setupUrl);
-  }
 
   const home = (portal && PORTALS[portal]?.home) || "/";
   return NextResponse.redirect(new URL(redirectTarget || home, request.url));

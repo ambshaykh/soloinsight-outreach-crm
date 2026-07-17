@@ -2,13 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { GripVertical, TrendingUp, Users2, Star, Cloud, LineChart } from "lucide-react";
+import { GripVertical, TrendingUp, Users2, Star, Cloud, LineChart, PieChart as PieChartIcon } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { saveExecutiveDashboardLayout } from "@/app/actions/executive";
 import { type LayoutItem, type WidgetId, type WidgetSize } from "@/lib/executive/layout-config";
 import { PipelineWidget } from "@/components/executive/widgets/pipeline-widget";
 import { PipelineForecastWidget } from "@/components/executive/widgets/pipeline-forecast-widget";
+import { ChannelMixWidget } from "@/components/executive/widgets/channel-mix-widget";
 import { TeamActivityWidget } from "@/components/executive/widgets/team-activity-widget";
 import { TopPriorityWidget } from "@/components/executive/widgets/top-priority-widget";
 import { SalesforceSummaryWidget } from "@/components/executive/widgets/salesforce-summary-widget";
@@ -16,6 +17,7 @@ import { SalesforceSummaryWidget } from "@/components/executive/widgets/salesfor
 const WIDGET_META: Record<WidgetId, { title: string; icon: typeof TrendingUp }> = {
   pipeline: { title: "Pipeline by status", icon: TrendingUp },
   pipeline_forecast: { title: "Pipeline forecast", icon: LineChart },
+  channel_mix: { title: "Outreach channel mix", icon: PieChartIcon },
   team_activity: { title: "Team activity (60 days)", icon: Users2 },
   top_priority: { title: "Top priority", icon: Star },
   salesforce_summary: { title: "Salesforce summary", icon: Cloud },
@@ -30,6 +32,7 @@ const SIZE_CLASSES: Record<WidgetSize, string> = {
 type DashboardData = {
   pipeline: { status: string; count: number }[];
   pipelineByWeek: { week: string; new: number; engaged: number; closed: number }[];
+  channelMix: { name: string; value: number }[];
   teamActivity: any[];
   topPriority: { accounts: any[]; contacts: any[] };
   salesforceSummary: { totalLeads: number; campaignsSynced: number; totalResponses: number };
@@ -85,6 +88,7 @@ export function DashboardGrid({
     switch (id) {
       case "pipeline": return <PipelineWidget data={data.pipeline} />;
       case "pipeline_forecast": return <PipelineForecastWidget data={data.pipelineByWeek} />;
+      case "channel_mix": return <ChannelMixWidget data={data.channelMix} />;
       case "team_activity": return <TeamActivityWidget data={data.teamActivity} />;
       case "top_priority": return <TopPriorityWidget data={data.topPriority} />;
       case "salesforce_summary": return <SalesforceSummaryWidget data={data.salesforceSummary} />;

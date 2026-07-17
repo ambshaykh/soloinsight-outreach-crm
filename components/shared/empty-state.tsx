@@ -6,7 +6,7 @@ export function EmptyState({
 }: { icon: LucideIcon; title: string; description?: string; action?: React.ReactNode; className?: string }) {
   return (
     <div className={cn("flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-14 text-center", className)}>
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-50">
         <Icon className="h-6 w-6 text-primary" />
       </div>
       <div className="space-y-1">

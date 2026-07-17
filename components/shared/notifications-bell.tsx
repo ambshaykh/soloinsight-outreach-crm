@@ -80,7 +80,7 @@ export function NotificationsBell({
                   key={n.id}
                   className={cn(
                     "flex flex-col gap-0.5 border-b border-slate-50 px-3 py-2.5 text-left last:border-0 hover:bg-slate-50",
-                    !n.read_at && "bg-blue-50/40"
+                    !n.read_at && "bg-violet-50/40"
                   )}
                 >
                   <div className="flex items-start justify-between gap-2">

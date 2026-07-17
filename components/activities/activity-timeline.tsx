@@ -9,7 +9,7 @@ const ICONS: Record<ActivityType, any> = {
 };
 
 const COLORS: Record<ActivityType, string> = {
-  email: "bg-blue-50 text-blue-600", call: "bg-cyan-50 text-cyan-600", linkedin: "bg-violet-50 text-violet-600",
+  email: "bg-violet-50 text-violet-600", call: "bg-fuchsia-50 text-fuchsia-600", linkedin: "bg-indigo-50 text-indigo-600",
   note: "bg-slate-100 text-slate-600", meeting: "bg-emerald-50 text-emerald-600",
   status_change: "bg-amber-50 text-amber-600", owner_assignment: "bg-indigo-50 text-indigo-600",
   follow_up: "bg-rose-50 text-rose-600",

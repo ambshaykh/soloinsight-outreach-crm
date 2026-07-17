@@ -5,7 +5,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, Legend,
 } from "recharts";
 
-const PIE_COLORS = ["#2563EB", "#5B9CFF", "#8B7BFF", "#93C5FD", "#34E2E2"];
+const PIE_COLORS = ["#7C3AED", "#A78BFA", "#C026D3", "#DDD6FE", "#F0ABFC"];
 
 export function ActivityByDayChart({ data }: { data: { date: string; count: number }[] }) {
   return (
@@ -15,7 +15,7 @@ export function ActivityByDayChart({ data }: { data: { date: string; count: numb
         <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#8B95A5" }} axisLine={false} tickLine={false} interval={4} />
         <YAxis tick={{ fontSize: 11, fill: "#8B95A5" }} axisLine={false} tickLine={false} allowDecimals={false} />
         <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E2E8F0" }} />
-        <Line type="monotone" dataKey="count" name="Activities" stroke="#2563EB" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="count" name="Activities" stroke="#7C3AED" strokeWidth={2} dot={false} />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -44,8 +44,8 @@ export function PipelineMovementChart({ data }: { data: { week: string; new: num
         <YAxis tick={{ fontSize: 11, fill: "#8B95A5" }} axisLine={false} tickLine={false} allowDecimals={false} />
         <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E2E8F0" }} />
         <Legend wrapperStyle={{ fontSize: 11 }} />
-        <Bar dataKey="new" name="New" stackId="a" fill="#93C5FD" radius={[4, 4, 0, 0]} />
-        <Bar dataKey="engaged" name="Engaged" stackId="a" fill="#2563EB" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="new" name="New" stackId="a" fill="#DDD6FE" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="engaged" name="Engaged" stackId="a" fill="#7C3AED" radius={[4, 4, 0, 0]} />
         <Bar dataKey="closed" name="Closed" stackId="a" fill="#0F1419" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>

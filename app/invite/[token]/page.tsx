@@ -64,7 +64,7 @@ export default function InvitePage({ params }: { params: { token: string } }) {
         {status === "valid" && invite && (
           <>
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-violet-50">
                 <UserPlus className="h-5 w-5 text-primary" />
               </div>
               <div>

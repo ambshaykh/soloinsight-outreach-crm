@@ -42,7 +42,7 @@ export function KanbanBoard({ contacts }: { contacts: (Contact & { account?: { c
               onDrop={(e) => { const id = e.dataTransfer.getData("text/contact-id"); if (id) handleDrop(col.status, id); }}
               className={cn(
                 "flex w-64 shrink-0 flex-col rounded-xl border bg-slate-50/60 p-2 transition-colors duration-200",
-                dragOverCol === col.status ? "border-primary bg-blue-50/60 ring-2 ring-primary/20" : "border-slate-200"
+                dragOverCol === col.status ? "border-primary bg-violet-50/60 ring-2 ring-primary/20" : "border-slate-200"
               )}
             >
               <div className="mb-2 flex items-center justify-between px-1">

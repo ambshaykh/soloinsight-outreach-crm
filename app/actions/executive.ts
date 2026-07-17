@@ -99,6 +99,7 @@ export async function getExecutiveDashboardData() {
     topReps,
     pipeline: dashboard.charts.pipelineByStatus,
     pipelineByWeek: analytics.pipelineByWeek,
+    channelMix: analytics.activityByChannel,
     teamActivity: leaderboard,
     topPriority,
     salesforceSummary,

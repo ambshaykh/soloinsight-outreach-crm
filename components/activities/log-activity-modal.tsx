@@ -145,7 +145,7 @@ export function LogActivityModal({
                 onClick={() => { setType(t); setChipIndex(null); }}
                 className={cn(
                   "flex flex-col items-center gap-1 rounded-lg border px-1 py-2 text-[11px] font-medium transition-colors",
-                  type === t ? "border-primary bg-blue-50 text-primary" : "border-slate-200 text-slate-500 hover:bg-slate-50"
+                  type === t ? "border-primary bg-violet-50 text-primary" : "border-slate-200 text-slate-500 hover:bg-slate-50"
                 )}
               >
                 <Icon className="h-4 w-4" />
