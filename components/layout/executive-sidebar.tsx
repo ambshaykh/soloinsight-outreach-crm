@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Trophy, ChevronRight, ArrowLeftRight } from "lucide-react";
+import { LayoutGrid, Trophy, TrendingUp, ChevronRight, ArrowLeftRight } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/lib/types/database";
@@ -11,6 +11,7 @@ import { portalsForRole } from "@/lib/auth/portals";
 const NAV_ITEMS = [
   { href: "/executive", label: "Overview", icon: LayoutGrid },
   { href: "/executive/leaderboard", label: "Team Leaderboard", icon: Trophy },
+  { href: "/executive/outreach-summary", label: "Outreach Summary", icon: TrendingUp },
 ] as const;
 
 export function ExecutiveSidebar({ role }: { role: UserRole }) {
