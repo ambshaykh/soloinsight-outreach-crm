@@ -114,6 +114,27 @@ export async function deleteContact(contactId: string) {
   return { error: null };
 }
 
+/** Bulk-deletes contacts selected via the checkboxes on the Contacts table. */
+export async function bulkDeleteContacts(contactIds: string[]) {
+  await requireProfile();
+  if (contactIds.length === 0) return { error: null, deleted: 0 };
+  const supabase = createClient();
+
+  const { error, count } = await supabase.from("contacts").delete({ count: "exact" }).in("id", contactIds);
+  if (error) return { error: error.message, deleted: 0 };
+
+  await supabase.rpc("log_audit_event", {
+    p_action: "contact.bulk_deleted", p_entity_type: "contact", p_entity_id: null,
+    p_metadata: { count: contactIds.length, ids: contactIds },
+  });
+
+  revalidatePath("/contacts");
+  revalidatePath("/accounts");
+  revalidatePath("/dashboard");
+  revalidatePath("/outreach-queue");
+  return { error: null, deleted: count ?? contactIds.length };
+}
+
 export async function snoozeContactFollowUp(contactId: string, days: number) {
   await requireProfile();
   const supabase = createClient();

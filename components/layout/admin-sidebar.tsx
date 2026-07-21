@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Users, KeyRound, Database, ChevronRight, ArrowLeftRight, Bell, FileBarChart } from "lucide-react";
+import { LayoutGrid, Users, KeyRound, Database, ChevronRight, ArrowLeftRight, Bell, FileBarChart, Activity } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/lib/types/database";
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/admin", label: "Overview", icon: LayoutGrid },
   { href: "/admin/users", label: "Users & Teams", icon: Users },
   { href: "/admin/roles", label: "Roles & Permissions", icon: KeyRound },
+  { href: "/admin/team-activity", label: "Team Activity", icon: Activity },
   { href: "/admin/notifications", label: "Notifications & Templates", icon: Bell },
   { href: "/admin/reports", label: "Reports & Analytics", icon: FileBarChart },
   { href: "/admin/security", label: "Security & Audit", icon: Database },

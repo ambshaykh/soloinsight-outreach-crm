@@ -9,12 +9,14 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BulkDeleteBar } from "@/components/shared/bulk-delete-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { LogActivityModal } from "@/components/activities/log-activity-modal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { formatRelativeDate, initials, fullName } from "@/lib/utils";
 import { CONTACT_STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
-import { updateContactStatus, updateContactPriority, deleteContact } from "@/app/actions/contacts";
+import { updateContactStatus, updateContactPriority, deleteContact, bulkDeleteContacts } from "@/app/actions/contacts";
 import type { Contact, ContactStatus, PriorityLevel, Profile } from "@/lib/types/database";
 
 type Row = Contact & {
@@ -28,6 +30,7 @@ export function ContactsTable({ contacts }: { contacts: Row[] }) {
   const [logging, setLogging] = useState<{ id: string; name: string; accountId: string | null; type: "email" | "call" } | null>(null);
   const [toDelete, setToDelete] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   if (contacts.length === 0) {
     return <EmptyState icon={Users} title="No contacts yet" description="Add a contact to start manual outreach." />;
@@ -60,11 +63,48 @@ export function ContactsTable({ contacts }: { contacts: Row[] }) {
     });
   }
 
+  function toggleRow(id: string, checked: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id); else next.delete(id);
+      return next;
+    });
+  }
+
+  function toggleAll(checked: boolean) {
+    setSelected(checked ? new Set(contacts.map((c) => c.id)) : new Set());
+  }
+
+  async function handleBulkDelete() {
+    const ids = Array.from(selected);
+    const r = await bulkDeleteContacts(ids);
+    if (r.error) { toast.error(r.error); return; }
+    toast.success(`${r.deleted} contact${r.deleted === 1 ? "" : "s"} deleted`);
+    setSelected(new Set());
+    router.refresh();
+  }
+
+  const allSelected = contacts.length > 0 && selected.size === contacts.length;
+  const someSelected = selected.size > 0 && !allSelected;
+
   return (
     <>
+      <BulkDeleteBar
+        count={selected.size}
+        itemLabel="contact"
+        onDelete={handleBulkDelete}
+        onClear={() => setSelected(new Set())}
+      />
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-10">
+              <Checkbox
+                checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                onCheckedChange={(v) => toggleAll(!!v)}
+                aria-label="Select all contacts"
+              />
+            </TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Company</TableHead>
             <TableHead>Title</TableHead>
@@ -80,6 +120,13 @@ export function ContactsTable({ contacts }: { contacts: Row[] }) {
         <TableBody>
           {contacts.map((c) => (
             <TableRow key={c.id}>
+              <TableCell>
+                <Checkbox
+                  checked={selected.has(c.id)}
+                  onCheckedChange={(v) => toggleRow(c.id, !!v)}
+                  aria-label={`Select ${c.first_name} ${c.last_name}`}
+                />
+              </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <Avatar className="h-7 w-7"><AvatarFallback className="text-[10px]">{initials(fullName(c.first_name, c.last_name))}</AvatarFallback></Avatar>

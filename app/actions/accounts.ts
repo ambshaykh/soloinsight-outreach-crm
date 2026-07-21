@@ -117,3 +117,23 @@ export async function updateAccountFollowUp(accountId: string, nextFollowUpAt: s
   revalidatePath("/accounts");
   return { error: null };
 }
+
+/** Bulk-deletes accounts selected via the checkboxes on the Accounts table. Open to every Sales portal user — see 0010_open_account_delete.sql. */
+export async function bulkDeleteAccounts(accountIds: string[]) {
+  await requireProfile();
+  if (accountIds.length === 0) return { error: null, deleted: 0 };
+  const supabase = createClient();
+
+  const { error, count } = await supabase.from("accounts").delete({ count: "exact" }).in("id", accountIds);
+  if (error) return { error: error.message, deleted: 0 };
+
+  await supabase.rpc("log_audit_event", {
+    p_action: "account.bulk_deleted", p_entity_type: "account", p_entity_id: null,
+    p_metadata: { count: accountIds.length, ids: accountIds },
+  });
+
+  revalidatePath("/accounts");
+  revalidatePath("/dashboard");
+  revalidatePath("/outreach-queue");
+  return { error: null, deleted: count ?? accountIds.length };
+}

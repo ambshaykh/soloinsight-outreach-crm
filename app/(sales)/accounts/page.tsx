@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { listAccounts } from "@/lib/data/accounts";
+import { listProfiles } from "@/lib/data/profiles";
 import { PageTransition } from "@/components/shared/page-transition";
 import { TableFilters } from "@/components/shared/table-filters";
 import { AccountsTable } from "@/components/accounts/accounts-table";
@@ -8,12 +9,16 @@ import { ACCOUNT_STATUS_LABELS, INDUSTRIES } from "@/lib/constants";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default async function AccountsPage({ searchParams }: { searchParams: Record<string, string> }) {
-  const accounts = await listAccounts({
-    search: searchParams.search,
-    status: searchParams.status,
-    industry: searchParams.industry,
-    priority: searchParams.priority,
-  });
+  const [accounts, profiles] = await Promise.all([
+    listAccounts({
+      search: searchParams.search,
+      status: searchParams.status,
+      industry: searchParams.industry,
+      priority: searchParams.priority,
+      owner: searchParams.owner,
+    }),
+    listProfiles(),
+  ]);
 
   return (
     <PageTransition>
@@ -35,6 +40,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Rec
               { value: "low", label: "Low" }, { value: "medium", label: "Medium" },
               { value: "high", label: "High" }, { value: "urgent", label: "Urgent" },
             ] },
+            { key: "owner", label: "Assigned to", options: profiles.map((p) => ({ value: p.id, label: p.full_name })) },
           ]}
         />
       </Suspense>

@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { listContacts } from "@/lib/data/contacts";
+import { listProfiles } from "@/lib/data/profiles";
 import { PageTransition } from "@/components/shared/page-transition";
 import { TableFilters } from "@/components/shared/table-filters";
 import { ContactsTable } from "@/components/contacts/contacts-table";
@@ -8,11 +9,15 @@ import { CONTACT_STATUS_LABELS } from "@/lib/constants";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default async function ContactsPage({ searchParams }: { searchParams: Record<string, string> }) {
-  const contacts = await listContacts({
-    search: searchParams.search,
-    status: searchParams.status,
-    priority: searchParams.priority,
-  });
+  const [contacts, profiles] = await Promise.all([
+    listContacts({
+      search: searchParams.search,
+      status: searchParams.status,
+      priority: searchParams.priority,
+      owner: searchParams.owner,
+    }),
+    listProfiles(),
+  ]);
 
   return (
     <PageTransition>
@@ -33,6 +38,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Rec
               { value: "low", label: "Low" }, { value: "medium", label: "Medium" },
               { value: "high", label: "High" }, { value: "urgent", label: "Urgent" },
             ] },
+            { key: "owner", label: "Assigned to", options: profiles.map((p) => ({ value: p.id, label: p.full_name })) },
           ]}
         />
       </Suspense>
