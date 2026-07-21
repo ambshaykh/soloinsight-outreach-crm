@@ -1,5 +1,6 @@
 import { requireProfile } from "@/lib/auth/session";
 import { getDashboardData } from "@/lib/data/dashboard";
+import { getBounceWidgetSummary } from "@/lib/data/bounces";
 import { PageTransition } from "@/components/shared/page-transition";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import {
@@ -8,12 +9,16 @@ import {
 import {
   TodaysFollowUpsWidget, RecentlyTouchedWidget, NeedsAttentionWidget,
 } from "@/components/dashboard/widgets";
+import { BounceMonitorWidget } from "@/components/dashboard/bounce-monitor-widget";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ACCOUNT_STATUS_LABELS } from "@/lib/constants";
 
 export default async function DashboardPage() {
   const profile = await requireProfile();
-  const { metrics, charts, widgets } = await getDashboardData(profile);
+  const [{ metrics, charts, widgets }, bounceSummary] = await Promise.all([
+    getDashboardData(profile),
+    getBounceWidgetSummary(),
+  ]);
 
   const pipelineData = charts.pipelineByStatus.map((p) => ({
     status: ACCOUNT_STATUS_LABELS[p.status as keyof typeof ACCOUNT_STATUS_LABELS] ?? p.status,
@@ -84,6 +89,10 @@ export default async function DashboardPage() {
         <TodaysFollowUpsWidget tasks={widgets.todaysFollowUps as any} />
         <RecentlyTouchedWidget contacts={widgets.recentlyTouched as any} />
         <NeedsAttentionWidget contacts={widgets.needsAttention as any} />
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <BounceMonitorWidget summary={bounceSummary} />
       </div>
     </PageTransition>
   );

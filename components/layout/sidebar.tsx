@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Building2, Users, ListChecks, CalendarClock,
-  Activity, BarChart3, ChevronRight, ArrowLeftRight,
+  Activity, BarChart3, ChevronRight, ArrowLeftRight, MailWarning,
 } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ const NAV_ITEMS = [
   { href: "/outreach-queue", label: "Outreach Queue", icon: ListChecks, roles: ["admin", "manager", "sdr"] },
   { href: "/follow-ups", label: "Follow Ups", icon: CalendarClock, roles: ["admin", "manager", "sdr"] },
   { href: "/activities", label: "Activities", icon: Activity, roles: ["admin", "manager", "sdr"] },
+  { href: "/bounces", label: "Bounce Monitor", icon: MailWarning, roles: ["admin", "manager", "sdr", "salesforce_admin"] },
   { href: "/analytics", label: "Analytics", icon: BarChart3, roles: ["admin", "manager"] },
 ] as const;
 
