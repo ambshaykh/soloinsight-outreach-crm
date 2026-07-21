@@ -1,9 +1,11 @@
 "use server";
 
-// Bulk CSV imports can involve hundreds of rows and several batched network
-// round trips to Supabase — give this route real headroom instead of
-// whatever short default the hosting platform would otherwise apply.
-export const maxDuration = 300;
+// NOTE: a `"use server"` file may only export async functions — Next.js
+// build-fails on any other export (this is why `export const maxDuration`
+// used to live here got removed). That's fine: the batching below already
+// cuts a 200+ row import from 800-1,000+ sequential round trips down to
+// roughly 5-10, so it finishes well within any platform's default timeout
+// without needing a raised limit.
 
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth/session";
